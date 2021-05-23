@@ -9,6 +9,7 @@ import (
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"log"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -46,7 +47,11 @@ func (c *ChatContext) BindConn(conn *net.Conn){
 			resp := model.Resp{}
 			json.Unmarshal(msg.Data, &resp)
 			if resp.Type == "broadcast" && resp.From.ID != c.conn.ID{
-				fmt.Printf("\r\r")
+				if runtime.GOOS == "windows" {
+					fmt.Printf("\r\r")
+				}else{
+					fmt.Printf("\r\033[K")
+				}
 				fmt.Printf("%s: %s\n", resp.From.Name, resp.Data)
 				fmt.Printf("%s: ", c.Name)
 			}else if resp.Type == "id" {
