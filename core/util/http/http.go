@@ -19,7 +19,7 @@ func init() {
 	}
 	httpClient = &http.Client{
 		Transport: tr,
-		Timeout:   time.Duration(30) * time.Second,
+		Timeout:   time.Duration(3) * time.Second,
 	}
 }
 

@@ -2,6 +2,7 @@ package shell
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/awesome-cmd/chat/client/ctx"
 	"github.com/awesome-cmd/chat/core/util/http"
@@ -9,6 +10,11 @@ import (
 	"os"
 	"strings"
 )
+
+var servers = []string{
+	"https://raw.githubusercontent.com/awesome-cmd/chat/main/servers.json",
+	"https://gitee.com/ainilili/chat/raw/main/servers.json",
+}
 
 type shell struct {
 	in *bufio.Reader
@@ -42,12 +48,17 @@ func (s *shell) Start(){
 }
 
 func (s *shell) refreshServerList() error{
-	resp, err := http.Get("https://gitee.com/ainilili/test/raw/master/serverlist.json")
-	if err != nil && resp == ""{
-		return err
-	}
 	serverList := make([]string, 0)
-	json.Unmarshal([]byte(resp), &serverList)
+	for _, server := range servers {
+		resp, err := http.Get(server)
+		if err != nil && resp == ""{
+			continue
+		}
+		json.Unmarshal([]byte(resp), &serverList)
+	}
+	if len(serverList) == 0 {
+		return errors.New("no available server. ")
+	}
 	s.position.reset()
 	for _, v := range serverList{
 		serverInfo := strings.Split(v, "|")
