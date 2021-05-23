@@ -2,30 +2,32 @@ package shell
 
 type directory struct {
 	name string
+	desc string
 	parent *directory
 	child []*directory
 	action action
 }
 
-func (d *directory) addChild(child *directory){
+func (d *directory) add(child *directory){
 	d.child = append(d.child, child)
 	child.parent = d
 }
 
-func newDirectory(name string, actions ...map[string]action) *directory{
+func (d *directory) reset(){
+	d.child = make([]*directory, 0)
+}
+
+func newDirectory(name string, desc string, actions ...actions) *directory{
 	return &directory{
 		name: name,
+		desc: desc,
 		action: func(s *shell, inputs []byte) (string, error) {
 			return distribute(s, inputs, actions...)
 		},
 	}
 }
 
-var root = newDirectory("/", rootActions, baseActions)
-var posts = newDirectory("posts", postsActions, baseActions)
-var followers = newDirectory("followers", followersActions, baseActions)
+var root = newDirectory("/", "", rootActions, baseActions)
 
 func init(){
-	root.addChild(posts)
-	root.addChild(followers)
 }

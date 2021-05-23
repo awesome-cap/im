@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/awesome-cmd/chat/core/model"
 	xnet "github.com/awesome-cmd/chat/core/net"
+	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"github.com/awesome-cmd/chat/server/chats"
@@ -33,14 +33,22 @@ func main() {
 		async.Async(func() {
 			c := xnet.NewConn(conn)
 			chats.BindClient(c)
-			c.Accept(func(data []byte, c *xnet.Conn) {
-				event := model.Event{}
-				json.Unmarshal(data, event)
-				err := c.Write(json.Marshal(events.Process(event, c)))
-				if err != nil{
-					log.Printf("c.Write err %v\n", err)
+			err := c.Accept(func(msg protocol.Msg, c *xnet.Conn) {
+				resp := events.Process(msg, c)
+				if resp != nil {
+					err := c.Write(protocol.Msg{
+						ID: msg.ID,
+						Data: json.Marshal(resp),
+					})
+					if err != nil{
+						chats.Clean(c)
+						log.Printf("c.Write err %v\n", err)
+					}
 				}
 			})
+			if err != nil {
+				log.Printf("c.Accept err %v\n", err)
+			}
 		})
 	}
 }

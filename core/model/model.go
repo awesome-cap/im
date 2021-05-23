@@ -7,7 +7,17 @@ type Msg struct {
 type Event struct {
 	Type string      `json:"type"`
 	Data string      `json:"data"`
-	From Client `json:"from"`
+	From *Client 	 `json:"from"`
+}
+
+func (e Event) Resp(code int, data []byte, msg string) *Resp{
+	return &Resp{
+		Code: code,
+		Data: data,
+		Msg: msg,
+		Type: e.Type,
+		From: e.From,
+	}
 }
 
 type Client struct {
@@ -25,6 +35,8 @@ type Chat struct {
 
 type Resp struct {
 	Code int `json:"code"`
-	Data interface{} `json:"data"`
+	Type string `json:"type"`
+	Data []byte `json:"data"`
 	Msg string `json:"msg"`
+	From *Client 	 `json:"from"`
 }
