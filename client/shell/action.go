@@ -153,7 +153,7 @@ func initServerActions(){
 		}
 		return builder.String(), nil
 	}).registerAction("touch", func(s *shell, inputs []byte) (s2 string, e error) {
-		args := strings.Split(string(inputs), " ")
+		args := strings.SplitN(string(inputs), " ", 2)
 		if len(args) != 2 {
 			return "", errors.New("mkdir $chatName")
 		}
