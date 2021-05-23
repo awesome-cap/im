@@ -1,7 +1,6 @@
-package main
+package server
 
 import (
-	"flag"
 	xnet "github.com/awesome-cmd/chat/core/net"
 	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
@@ -10,17 +9,14 @@ import (
 	"github.com/awesome-cmd/chat/server/events"
 	"log"
 	"net"
-	"strconv"
 )
 
-var port int
-
-func init(){
-	flag.IntVar(&port, "p", 3333, "Port of Server")
-}
-
-func main() {
-	listener, err := net.Listen("tcp", ":" + strconv.Itoa(port))
+func Run(args []string) {
+	port := "3333"
+	if len(args) > 0 {
+		port = args[0]
+	}
+	listener, err := net.Listen("tcp", ":" + port)
 	if err != nil {
 		log.Fatal(err)
 	}

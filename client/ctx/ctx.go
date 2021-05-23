@@ -139,3 +139,13 @@ func (c *ChatContext) Broadcast(msg string) error{
 	}
 	return nil
 }
+
+func (c *ChatContext) Leave() error{
+	_, err := c.conn.WriteID(json.Marshal(model.Event{
+		Type: "leave",
+	}))
+	if err != nil{
+		return err
+	}
+	return nil
+}

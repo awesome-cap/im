@@ -174,7 +174,9 @@ func initServerActions(){
 		for {
 			msg, _ := s.readline()
 			if string(msg) == ":q" {
-				break
+				if s.ctx.Leave() == nil {
+					break
+				}
 			}
 			err := s.ctx.Broadcast(string(msg))
 			if err != nil{

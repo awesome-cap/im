@@ -31,6 +31,10 @@ var processors = map[string]processor{
 		chats.Change(event.From, chatId)
 		return event.Resp(0, nil, "success")
 	},
+	"leave": func(id int64, event model.Event) *model.Resp {
+		chats.Leave(event.From)
+		return event.Resp(0, nil, "success")
+	},
 	"create": func(id int64, event model.Event) *model.Resp {
 		if len(event.Data) < 0 {
 			return event.Resp(500, nil, "chat name can't be empty")

@@ -1,17 +1,15 @@
-package main
+package client
 
 import (
 	"github.com/awesome-cmd/chat/client/shell"
 	"log"
-	"os"
 )
 
-func main() {
-	os.Args = append(os.Args, "nico")
-	if len(os.Args) == 1 {
+func Run(args []string) {
+	if len(args) == 0 {
 		log.Fatal("Please input your name !")
 	}
-	name := os.Args[1]
+	name := args[0]
 	if len(name) < 0 {
 		log.Fatal("name can't be empty")
 	}
@@ -19,5 +17,4 @@ func main() {
 		log.Fatal("name length must in 30 char")
 	}
 	shell.New(name).Start()
-
 }
