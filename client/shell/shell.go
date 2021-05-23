@@ -8,9 +8,7 @@ import (
 	"github.com/awesome-cmd/chat/core/util/http"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"os"
-	"runtime"
 	"strings"
-	"unicode/utf8"
 )
 
 var servers = []string{
@@ -76,15 +74,7 @@ func (s *shell) readline() ([]byte, error){
 	return []byte(strings.TrimSpace(string(inputs))), err
 }
 
-func (s *shell) erase(line string) {
-	n := utf8.RuneCountInString(line)
-	if runtime.GOOS == "windows" {
-		clearString := "\r" + strings.Repeat(" ", n) + "\r"
-		fmt.Fprint(s.out, clearString)
-		return
-	}
-	for _, c := range []string{"\b", "\127", "\b", "\033[K"} { // "\033[K" for macOS Terminal
-		fmt.Fprint(s.out, strings.Repeat(c, n))
-	}
-	fmt.Fprintf(s.out, "\r\033[K") // erases to end of line
+func (s *shell) eraseLine() {
+	fmt.Printf("\033[1A")
+	fmt.Printf("\r\r")
 }

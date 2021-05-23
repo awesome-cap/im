@@ -172,13 +172,13 @@ func initServerActions(){
 			return "", errors.New(fmt.Sprintf("vim chat err: %v", err))
 		}
 		for {
+			fmt.Printf("%s: ", s.ctx.Name)
 			msg, _ := s.readline()
 			if string(msg) == ":q" {
 				if s.ctx.Leave() == nil {
 					break
 				}
 			}
-			s.erase(string(msg))
 			err := s.ctx.Broadcast(string(msg))
 			if err != nil{
 				return "", errors.New(fmt.Sprintf("vim err: %v", err))

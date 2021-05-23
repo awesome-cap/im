@@ -44,7 +44,7 @@ func (c *ChatContext) BindConn(conn *net.Conn){
 			}
 			resp := model.Resp{}
 			json.Unmarshal(msg.Data, &resp)
-			if resp.Type == "broadcast" {
+			if resp.Type == "broadcast" && resp.From.ID != c.conn.ID{
 				fmt.Printf("%s: %s\n", resp.From.Name, resp.Data)
 			}
 		})
