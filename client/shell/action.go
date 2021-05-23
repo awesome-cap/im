@@ -178,6 +178,7 @@ func initServerActions(){
 					break
 				}
 			}
+			s.erase(string(msg))
 			err := s.ctx.Broadcast(string(msg))
 			if err != nil{
 				return "", errors.New(fmt.Sprintf("vim err: %v", err))
@@ -186,3 +187,4 @@ func initServerActions(){
 		return "", nil
 	})
 }
+

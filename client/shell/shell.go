@@ -8,7 +8,9 @@ import (
 	"github.com/awesome-cmd/chat/core/util/http"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"os"
+	"runtime"
 	"strings"
+	"unicode/utf8"
 )
 
 var servers = []string{
@@ -18,6 +20,7 @@ var servers = []string{
 
 type shell struct {
 	in *bufio.Reader
+	out *bufio.Writer
 	ctx *ctx.ChatContext
 	position *directory
 }
@@ -25,6 +28,7 @@ type shell struct {
 func New(name string) *shell{
 	return &shell{
 		in: bufio.NewReader(os.Stdin),
+		out: bufio.NewWriter(os.Stdout),
 		ctx: ctx.NewContext(name),
 		position: root,
 	}
@@ -70,4 +74,17 @@ func (s *shell) refreshServerList() error{
 func (s *shell) readline() ([]byte, error){
 	inputs, err := s.in.ReadBytes('\n')
 	return []byte(strings.TrimSpace(string(inputs))), err
+}
+
+func (s *shell) erase(line string) {
+	n := utf8.RuneCountInString(line)
+	if runtime.GOOS == "windows" {
+		clearString := "\r" + strings.Repeat(" ", n) + "\r"
+		fmt.Fprint(s.out, clearString)
+		return
+	}
+	for _, c := range []string{"\b", "\127", "\b", "\033[K"} { // "\033[K" for macOS Terminal
+		fmt.Fprint(s.out, strings.Repeat(c, n))
+	}
+	fmt.Fprintf(s.out, "\r\033[K") // erases to end of line
 }
