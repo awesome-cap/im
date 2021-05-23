@@ -9,6 +9,7 @@ import (
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -46,6 +47,9 @@ func (c *ChatContext) BindConn(conn *net.Conn){
 			json.Unmarshal(msg.Data, &resp)
 			if resp.Type == "broadcast" && resp.From.ID != c.conn.ID{
 				fmt.Printf("%s: %s\n", resp.From.Name, resp.Data)
+			}else if resp.Type == "id" {
+				id, _ := strconv.ParseInt(string(resp.Data), 10, 64)
+				c.conn.ID = id
 			}
 		})
 		if err != nil {
