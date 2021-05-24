@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/awesome-cmd/chat/client/render"
 	xnet "github.com/awesome-cmd/chat/core/net"
 	"net"
 	"os"
@@ -173,7 +174,7 @@ func initServerActions(){
 		}
 		for {
 			fmt.Printf("%s: ", s.ctx.Name)
-			msg, _ := s.readline()
+			msg, _ := render.Readline()
 			if string(msg) == ":q" {
 				if s.ctx.Leave() == nil {
 					break

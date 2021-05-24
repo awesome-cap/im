@@ -1,13 +1,12 @@
 package shell
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"github.com/awesome-cmd/chat/client/ctx"
+	"github.com/awesome-cmd/chat/client/render"
 	"github.com/awesome-cmd/chat/core/util/http"
 	"github.com/awesome-cmd/chat/core/util/json"
-	"os"
 	"strings"
 )
 
@@ -17,16 +16,13 @@ var servers = []string{
 }
 
 type shell struct {
-	in *bufio.Reader
-	out *bufio.Writer
+
 	ctx *ctx.ChatContext
 	position *directory
 }
 
 func New(name string) *shell{
 	return &shell{
-		in: bufio.NewReader(os.Stdin),
-		out: bufio.NewWriter(os.Stdout),
 		ctx: ctx.NewContext(name),
 		position: root,
 	}
@@ -35,7 +31,7 @@ func New(name string) *shell{
 func (s *shell) Start(){
 	for{
 		fmt.Printf("[%s@chat %s]# ", s.ctx.Name, s.position.name)
-		inputs, err := s.readline()
+		inputs, err := render.Readline()
 		if err != nil{
 			fmt.Println(err.Error())
 			continue
@@ -69,12 +65,3 @@ func (s *shell) refreshServerList() error{
 	return nil
 }
 
-func (s *shell) readline() ([]byte, error){
-	inputs, err := s.in.ReadBytes('\n')
-	return []byte(strings.TrimSpace(string(inputs))), err
-}
-
-func (s *shell) eraseLine() {
-	fmt.Printf("\033[1A")
-	fmt.Printf("\r\r")
-}
