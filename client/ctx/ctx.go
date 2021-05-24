@@ -9,7 +9,6 @@ import (
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"log"
-	"runtime"
 	"strconv"
 	"time"
 )
@@ -48,16 +47,10 @@ func (c *ChatContext) ListenerBroadcast(){
 			}
 			resp := model.Resp{}
 			json.Unmarshal(msg, &resp)
-			if serial > 1{
+			if serial > 1 {
 				fmt.Printf("\n")
 			}
-			if runtime.GOOS == "windows" {
-				fmt.Printf("\r\r")
-			}else{
-				fmt.Printf("\r\033[K")
-			}
 			fmt.Printf("%s %s: %s", resp.Time.Format("2006-01-02 15:04:05"), resp.From.Name, resp.Data)
-			fmt.Printf("\nEnter to send")
 			serial ++
 		}
 	})

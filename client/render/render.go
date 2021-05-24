@@ -19,18 +19,11 @@ var (
 )
 
 func Readline() ([]byte, error){
-	for {
-		b, err := in.ReadByte()
-		if err != nil {
-			return nil, err
-		}
-		if b == '\n'{
-			lines := buffer.Bytes()
-			buffer.Reset()
-			return []byte(strings.TrimSpace(string(lines))), nil
-		}
-		buffer.WriteByte(b)
+	lines, err := in.ReadBytes('\n')
+	if err != nil {
+		return nil, err
 	}
+	return []byte(strings.TrimSpace(string(lines[0:len(lines) - 1]))), nil
 }
 
 func ReadBuffer() []byte{

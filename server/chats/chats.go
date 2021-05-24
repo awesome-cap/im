@@ -4,6 +4,7 @@ import (
 	"github.com/awesome-cmd/chat/core/model"
 	"github.com/awesome-cmd/chat/core/net"
 	"github.com/awesome-cmd/chat/core/protocol"
+	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"sort"
 	"sync/atomic"
@@ -52,9 +53,12 @@ func Delete(c *model.Client, chatId int64) bool{
 
 func Broadcast(c *model.Client, id int64, msg *model.Resp){
 	if c.ChatID > 0 && chatClients[c.ChatID] != nil{
-		for cid := range chatClients[c.ChatID]{
+		for clientId := range chatClients[c.ChatID]{
+			cid := clientId
 			if clients[cid] != nil {
-				Reply(clients[cid], id, msg)
+				async.Async(func() {
+					Reply(clients[cid], id, msg)
+				})
 			}
 		}
 	}

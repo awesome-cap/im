@@ -134,6 +134,7 @@ func initRootActions(){
 				}
 				s.ctx.BindConn(xnet.NewConn(conn))
 				_ = s.ctx.Rename(s.ctx.Name)
+				break
 			}
 		}
 		if s.ctx.Conn() == nil {
@@ -175,7 +176,6 @@ func initServerActions(){
 		}
 		s.ctx.ListenerBroadcast()
 		for {
-			fmt.Printf("Enter to send")
 			_, _ = render.Readline()
 			s.ctx.OffListenerBroadcast()
 			fmt.Printf("%s %s: ", time.Now().Format("2006-01-02 15:04:05"), s.ctx.Name)
