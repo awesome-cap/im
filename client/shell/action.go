@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 )
 
 type action func(s *shell, inputs []byte) (string, error)
@@ -176,7 +177,7 @@ func initServerActions(){
 		for {
 			_, _ = render.Readline()
 			s.ctx.OffListenerBroadcast()
-			fmt.Printf("%s: ", s.ctx.Name)
+			fmt.Printf("%s %s: ", time.Now().Format("2006-01-02 15:04:05"), s.ctx.Name)
 			msg, _ := render.Readline()
 			if string(msg) == ":q" {
 				if s.ctx.Leave() == nil {

@@ -39,6 +39,7 @@ func (c *ChatContext) Conn() *net.Conn{
 
 func (c *ChatContext) ListenerBroadcast(){
 	async.Async(func() {
+		serial := 1
 		for {
 			msg := <- c.broadcast
 			if len(msg) == 1 && msg[0] == 0{
@@ -46,7 +47,11 @@ func (c *ChatContext) ListenerBroadcast(){
 			}
 			resp := model.Resp{}
 			json.Unmarshal(msg, &resp)
-			fmt.Printf("%s: %s\n", resp.From.Name, resp.Data)
+			if serial > 1{
+				fmt.Printf("\n")
+			}
+			fmt.Printf("%s %s: %s", resp.Time.Format("2006-01-02 15:04:05"), resp.From.Name, resp.Data)
+			serial ++
 		}
 	})
 }

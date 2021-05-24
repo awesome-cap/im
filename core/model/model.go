@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type Msg struct {
 	Data []byte `json:"data"`
 }
@@ -17,6 +19,7 @@ func (e Event) Resp(code int, data []byte, msg string) *Resp{
 		Msg: msg,
 		Type: e.Type,
 		From: e.From,
+		Time: time.Now(),
 	}
 }
 
@@ -39,4 +42,5 @@ type Resp struct {
 	Data []byte `json:"data"`
 	Msg string `json:"msg"`
 	From *Client 	 `json:"from"`
+	Time time.Time `json:"time"`
 }

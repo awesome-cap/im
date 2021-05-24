@@ -93,10 +93,12 @@ func Client(c *net.Conn) *model.Client{
 }
 
 func Leave(c *model.Client) {
-	if _, ok := chatClients[c.ID]; ok && c.ChatID > 0{
+	if _, ok := chatClients[c.ID]; ok {
 		delete(chatClients[c.ChatID], c.ID)
+		c.ChatID = 0
 	}
 }
+
 func Join(c *model.Client, chatId int64){
 	if _, ok := chatClients[chatId]; ok {
 		Leave(c)
