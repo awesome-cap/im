@@ -175,6 +175,7 @@ func initServerActions(){
 		}
 		s.ctx.ListenerBroadcast()
 		for {
+			fmt.Printf("Enter to send")
 			_, _ = render.Readline()
 			s.ctx.OffListenerBroadcast()
 			fmt.Printf("%s %s: ", time.Now().Format("2006-01-02 15:04:05"), s.ctx.Name)

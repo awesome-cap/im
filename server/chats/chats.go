@@ -17,8 +17,8 @@ var (
 	clientConn = map[int64]*net.Conn{}
 )
 
-func Change(c *model.Client, chatId int64){
-	Join(c, chatId)
+func Change(c *model.Client, chatId int64) bool{
+	return Join(c, chatId)
 }
 
 func Create(c *model.Client, name string) *model.Chat{
@@ -93,18 +93,20 @@ func Client(c *net.Conn) *model.Client{
 }
 
 func Leave(c *model.Client) {
-	if _, ok := chatClients[c.ID]; ok {
+	if _, ok := chatClients[c.ChatID]; ok {
 		delete(chatClients[c.ChatID], c.ID)
 		c.ChatID = 0
 	}
 }
 
-func Join(c *model.Client, chatId int64){
+func Join(c *model.Client, chatId int64) bool{
 	if _, ok := chatClients[chatId]; ok {
 		Leave(c)
 		chatClients[chatId][c.ID] = true
 		c.ChatID = chatId
+		return true
 	}
+	return false
 }
 
 func Clean(c *net.Conn){

@@ -11,7 +11,7 @@ import (
 
 var processors = map[string]processor{
 	"rename": func(id int64, event model.Event) *model.Resp {
-		if len(event.Data) < 0 {
+		if len(event.Data) == 0 {
 			return event.Resp(500, nil,  "name can't be empty")
 		}
 		if len([]rune(event.Data)) > 30{
@@ -28,7 +28,10 @@ var processors = map[string]processor{
 		if err != nil{
 			return event.Resp(500, nil, "please input correct chat number.")
 		}
-		chats.Change(event.From, chatId)
+		suc := chats.Change(event.From, chatId)
+		if ! suc {
+			return event.Resp(500, nil, "chat not exist.")
+		}
 		return event.Resp(0, nil, "success")
 	},
 	"leave": func(id int64, event model.Event) *model.Resp {
@@ -36,7 +39,7 @@ var processors = map[string]processor{
 		return event.Resp(0, nil, "success")
 	},
 	"create": func(id int64, event model.Event) *model.Resp {
-		if len(event.Data) < 0 {
+		if len(event.Data) == 0 {
 			return event.Resp(500, nil, "chat name can't be empty")
 		}
 		if len([]rune(event.Data)) > 30{
@@ -56,7 +59,7 @@ var processors = map[string]processor{
 		return event.Resp(500, nil, "fail")
 	},
 	"broadcast": func(id int64, event model.Event) *model.Resp {
-		if len(event.Data) < 0 {
+		if len(event.Data) == 0 {
 			return event.Resp(500, nil, "message can't be empty")
 		}
 		if len([]rune(event.Data)) > 65535{
