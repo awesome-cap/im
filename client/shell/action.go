@@ -172,7 +172,10 @@ func initServerActions(){
 		if err != nil {
 			return "", errors.New(fmt.Sprintf("vim chat err: %v", err))
 		}
+		s.ctx.ListenerBroadcast()
 		for {
+			_, _ = render.Readline()
+			s.ctx.OffListenerBroadcast()
 			fmt.Printf("%s: ", s.ctx.Name)
 			msg, _ := render.Readline()
 			if string(msg) == ":q" {
@@ -180,6 +183,7 @@ func initServerActions(){
 					break
 				}
 			}
+			s.ctx.ListenerBroadcast()
 			err := s.ctx.Broadcast(string(msg))
 			if err != nil{
 				return "", errors.New(fmt.Sprintf("vim err: %v", err))

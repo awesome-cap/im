@@ -9,7 +9,6 @@ import (
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"log"
-	"runtime"
 	"strconv"
 	"time"
 )
@@ -22,18 +21,38 @@ type ChatContext struct {
 	Name string `json:"name"`
 
 	conn *net.Conn
+	broadcast chan []byte
 	notifies map[int64]chan []byte
 }
 
 func NewContext(name string) *ChatContext{
 	return &ChatContext{
 		Name: name,
+		broadcast: make(chan []byte),
 		notifies: map[int64]chan []byte{},
 	}
 }
 
 func (c *ChatContext) Conn() *net.Conn{
 	return c.conn
+}
+
+func (c *ChatContext) ListenerBroadcast(){
+	async.Async(func() {
+		for {
+			msg := <- c.broadcast
+			if len(msg) == 1 && msg[0] == 0{
+				break
+			}
+			resp := model.Resp{}
+			json.Unmarshal(msg, &resp)
+			fmt.Printf("%s: %s\n", resp.From.Name, resp.Data)
+		}
+	})
+}
+
+func (c *ChatContext) OffListenerBroadcast(){
+	c.broadcast <- []byte{0}
 }
 
 func (c *ChatContext) BindConn(conn *net.Conn){
@@ -47,13 +66,7 @@ func (c *ChatContext) BindConn(conn *net.Conn){
 			resp := model.Resp{}
 			json.Unmarshal(msg.Data, &resp)
 			if resp.Type == "broadcast" && resp.From.ID != c.conn.ID{
-				if runtime.GOOS == "windows" {
-					fmt.Printf("\r\r")
-				}else{
-					fmt.Printf("\r\033[K")
-				}
-				fmt.Printf("%s: %s\n", resp.From.Name, resp.Data)
-				fmt.Printf("%s: ", c.Name)
+				c.broadcast <- msg.Data
 			}else if resp.Type == "id" {
 				id, _ := strconv.ParseInt(string(resp.Data), 10, 64)
 				c.conn.ID = id

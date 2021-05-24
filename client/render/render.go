@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 )
 
 var (
@@ -26,7 +27,7 @@ func Readline() ([]byte, error){
 		if b == '\n'{
 			lines := buffer.Bytes()
 			buffer.Reset()
-			return lines, nil
+			return []byte(strings.TrimSpace(string(lines))), nil
 		}
 		buffer.WriteByte(b)
 	}
