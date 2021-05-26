@@ -7,6 +7,7 @@ package cluster
 import (
 	"github.com/awesome-cmd/chat/core/model"
 	"github.com/awesome-cmd/chat/core/util/json"
+	"github.com/awesome-cmd/chat/server/chats"
 	"github.com/awesome-cmd/chat/server/events"
 	"github.com/hashicorp/memberlist"
 	"log"
@@ -18,8 +19,6 @@ import (
 var (
 	broadcasts *memberlist.TransmitLimitedQueue
 	BroadcastEvents = map[string]bool{
-		"create": true,
-		"delete": true,
 		"broadcast": true,
 	}
 )
@@ -45,7 +44,6 @@ func (b *broadcast) Finished() {
 
 type delegate struct{
 	mtx        sync.RWMutex
-	items      map[string]string
 }
 
 func (d *delegate) NodeMeta(limit int) []byte {
@@ -54,7 +52,7 @@ func (d *delegate) NodeMeta(limit int) []byte {
 
 func (d *delegate) NotifyMsg(b []byte) {
 	event := model.Event{}
-	json.Unmarshal(b, event)
+	json.Unmarshal(b, &event)
 	events.Process(0, event)
 }
 
@@ -64,25 +62,16 @@ func (d *delegate) GetBroadcasts(overhead, limit int) [][]byte {
 
 func (d *delegate) LocalState(join bool) []byte {
 	d.mtx.RLock()
-	m := d.items
-	d.mtx.RUnlock()
-	return json.Marshal(m)
+	defer d.mtx.RUnlock()
+	return json.Marshal(chats.GetChats())
 }
 
 func (d *delegate) MergeRemoteState(buf []byte, join bool) {
-	if len(buf) == 0 {
-		return
-	}
-	if !join {
-		return
-	}
-	var m map[string]string
-	json.Unmarshal(buf, &m)
-	d.mtx.Lock()
-	for k, v := range m {
-		d.items[k] = v
-	}
-	d.mtx.Unlock()
+	chatList := map[int64]*model.Chat{}
+	json.Unmarshal(buf, &chatList)
+	d.mtx.RLock()
+	defer d.mtx.RUnlock()
+	chats.SetChats(chatList)
 }
 
 func Broadcast(data []byte) {
@@ -107,7 +96,7 @@ func (ed *eventDelegate) NotifyUpdate(node *memberlist.Node) {
 	log.Printf("A node was updated: %s\n", node.String())
 }
 
-func Init(port int, seeds []string) error{
+func Start(port int, seeds []string) error{
 	hostname, _ := os.Hostname()
 	config := memberlist.DefaultLocalConfig()
 	config.Name = hostname + "-" + strconv.Itoa(port)
@@ -115,7 +104,7 @@ func Init(port int, seeds []string) error{
 	config.AdvertisePort = port
 	delegate := &delegate{}
 	config.Delegate = delegate
-	config.Events = &eventDelegate{}
+	//config.Events = &eventDelegate{}
 	m, err := memberlist.Create(config)
 	if err != nil{
 		return err

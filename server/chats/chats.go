@@ -11,12 +11,23 @@ import (
 )
 
 var (
-	id int64 = 0
+	ChatId int64 = 0
+	ClientId int64 = 0
+	IdStep int64 = 100
+
 	chats = map[int64]*model.Chat{}
 	chatClients = map[int64]map[int64]bool{}
 	clients = map[int64]*model.Client{}
 	clientConn = map[int64]*net.Conn{}
 )
+
+func nextChatID() int64{
+	return atomic.AddInt64(&ChatId, IdStep)
+}
+
+func nextClientID() int64{
+	return atomic.AddInt64(&ClientId, IdStep)
+}
 
 func Change(c *model.Client, chatId int64) bool{
 	return Join(c, chatId)
@@ -24,7 +35,7 @@ func Change(c *model.Client, chatId int64) bool{
 
 func Create(c *model.Client, name string) *model.Chat{
 	chat := &model.Chat{
-		ID: atomic.AddInt64(&id, 1),
+		ID: nextChatID(),
 		Name: name,
 		Creator: c.Name,
 		CreateID: c.ID,
@@ -75,6 +86,8 @@ func Reply(c *model.Client, id int64, msg *model.Resp){
 }
 
 func BindClient(conn *net.Conn) {
+	clientId := nextClientID()
+	conn.ID = clientId
 	clientConn[conn.ID] = conn
 	clients[conn.ID] = &model.Client{
 		ID: conn.ID,
@@ -90,6 +103,19 @@ func Chats() []*model.Chat{
 		return result[i].ID < result[j].ID
 	})
 	return result
+}
+
+func GetChats() map[int64]*model.Chat{
+	return chats
+}
+
+func SetChats(chatList map[int64]*model.Chat){
+	for k, v := range chatList {
+		chats[k] = v
+		if _, ok := chatClients[k]; ! ok{
+			chatClients[k] = map[int64]bool{}
+		}
+	}
 }
 
 func Client(c *net.Conn) *model.Client{

@@ -17,6 +17,8 @@ import (
 )
 
 var (
+	id uint64
+	step uint64
 	port int
 	clusterPort int
 	clusterSeeds string
@@ -25,19 +27,29 @@ var (
 func Run() {
 	flag.Bool("s", true, "")
 	flag.IntVar(&port, "p", 3333, "server port.")
+	flag.Uint64Var(&id, "id", 1, "start id.")
+	flag.Uint64Var(&step, "step", 10, "id step.")
 	flag.IntVar(&clusterPort, "cluster-port", 3334, "cluster seeds.")
 	flag.StringVar(&clusterSeeds, "cluster-seeds", "", "cluster port.")
 	flag.Parse()
 
-	listener, err := net.Listen("tcp", ":" + strconv.Itoa(port))
-	if err != nil {
-		log.Fatal(err)
-	}
+	// id
+	chats.ChatId = int64(id)
+	chats.ClientId = int64(id)
+	chats.IdStep = int64(step)
+
+	// cluster
 	seeds := make([]string, 0)
 	if clusterSeeds != ""{
 		seeds = strings.Split(clusterSeeds, ",")
 	}
-	err = cluster.Init(clusterPort, seeds)
+	err := cluster.Start(clusterPort, seeds)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// server
+	listener, err := net.Listen("tcp", ":" + strconv.Itoa(port))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,10 +80,10 @@ func Run() {
 				json.Unmarshal(msg.Data, &event)
 				event.From = chats.Client(c)
 				resp := events.Process(msg.ID, event)
+				if cluster.BroadcastEvents[event.Type] {
+					cluster.Broadcast(json.Marshal(event))
+				}
 				if resp != nil {
-					if resp.Code == 0 && cluster.BroadcastEvents[event.Type] {
-						cluster.Broadcast(json.Marshal(event))
-					}
 					err := c.Write(protocol.Msg{
 						ID: msg.ID,
 						Data: json.Marshal(resp),

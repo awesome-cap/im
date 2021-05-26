@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/awesome-cmd/chat/client/render"
 	xnet "github.com/awesome-cmd/chat/core/net"
+	"math/rand"
 	"net"
 	"os"
 	"strings"
@@ -123,8 +124,9 @@ func initRootActions(){
 		for _, v := range s.position.child {
 			if v.name == args[1] {
 				serverInfo := strings.Split(v.desc, "|")
-				addr := serverInfo[0]
-				tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+				servers := strings.Split(serverInfo[0], ",")
+				server := servers[rand.Intn(len(servers))]
+				tcpAddr, err := net.ResolveTCPAddr("tcp", server)
 				if err != nil{
 					return "", errors.New(fmt.Sprintf("cd server error: %v", err))
 				}

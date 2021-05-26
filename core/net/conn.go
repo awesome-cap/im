@@ -3,7 +3,6 @@ package net
 import (
 	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
-	"log"
 	"net"
 	"sync/atomic"
 )
@@ -45,16 +44,18 @@ func (c *Conn) parse() (*protocol.Msg, error) {
 	return msg, nil
 }
 
+func (c *Conn) Close() error {
+	return c.conn.Close()
+}
+
 func (c *Conn) Accept(apply func(msg protocol.Msg, c *Conn)) error{
 	for {
 		err := c.read()
 		if err != nil {
-			log.Printf("c.read() err： %v", err)
 			return err
 		}
 		msg, err := c.parse()
 		if err != nil {
-			log.Printf("c.parse() err： %v", err)
 			return err
 		}
 		if msg != nil {

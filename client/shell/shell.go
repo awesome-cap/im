@@ -16,7 +16,6 @@ var servers = []string{
 }
 
 type shell struct {
-
 	ctx *ctx.ChatContext
 	position *directory
 }

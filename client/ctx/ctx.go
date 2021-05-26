@@ -8,7 +8,6 @@ import (
 	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
-	"log"
 	"strconv"
 	"time"
 )
@@ -61,9 +60,12 @@ func (c *ChatContext) OffListenerBroadcast(){
 }
 
 func (c *ChatContext) BindConn(conn *net.Conn){
+	if c.conn != nil {
+		_ = c.conn.Close()
+	}
 	c.conn = conn
 	async.Async(func() {
-		err := c.conn.Accept(func(msg protocol.Msg, conn *net.Conn) {
+		_ = c.conn.Accept(func(msg protocol.Msg, conn *net.Conn) {
 			if ch, ok := c.notifies[msg.ID]; ok{
 				ch <- msg.Data
 				return
@@ -77,9 +79,6 @@ func (c *ChatContext) BindConn(conn *net.Conn){
 				c.conn.ID = id
 			}
 		})
-		if err != nil {
-			log.Printf("conn err: %v\n", err)
-		}
 	})
 }
 

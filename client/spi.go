@@ -12,10 +12,10 @@ var (
 
 func Run() {
 	flag.Bool("c", true, "")
-	flag.StringVar(&name, "n", "", "your name.")
+	flag.StringVar(&name, "n", "doge", "your name.")
 	flag.Parse()
 
-	if len(name) < 0 {
+	if len(name) <= 0 {
 		log.Fatal("name can't be empty")
 	}
 	if len([]rune(name)) > 30{
