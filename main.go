@@ -11,15 +11,14 @@ import (
 	"os"
 )
 
-
 func main()  {
 	if len(os.Args) < 2 {
 		log.Fatal("please input chat -s or -c")
 	}
 	if os.Args[1] == "-s" {
-		server.Run(os.Args[2:])
+		server.Run()
 	}else if os.Args[1] == "-c" {
-		client.Run(os.Args[2:])
+		client.Run()
 	}else{
 		log.Fatal("-s or -c required")
 	}

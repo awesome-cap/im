@@ -1,15 +1,20 @@
 package client
 
 import (
+	"flag"
 	"github.com/awesome-cmd/chat/client/shell"
 	"log"
 )
 
-func Run(args []string) {
-	if len(args) == 0 {
-		log.Fatal("Please input your name !")
-	}
-	name := args[0]
+var (
+	name string
+)
+
+func Run() {
+	flag.Bool("c", true, "")
+	flag.StringVar(&name, "n", "", "your name.")
+	flag.Parse()
+
 	if len(name) < 0 {
 		log.Fatal("name can't be empty")
 	}

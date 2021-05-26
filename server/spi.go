@@ -1,24 +1,43 @@
 package server
 
 import (
+	"flag"
 	"github.com/awesome-cmd/chat/core/model"
 	xnet "github.com/awesome-cmd/chat/core/net"
 	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"github.com/awesome-cmd/chat/server/chats"
+	"github.com/awesome-cmd/chat/server/cluster"
 	"github.com/awesome-cmd/chat/server/events"
 	"log"
 	"net"
 	"strconv"
+	"strings"
 )
 
-func Run(args []string) {
-	port := "3333"
-	if len(args) > 0 {
-		port = args[0]
+var (
+	port int
+	clusterPort int
+	clusterSeeds string
+)
+
+func Run() {
+	flag.Bool("s", true, "")
+	flag.IntVar(&port, "p", 3333, "server port.")
+	flag.IntVar(&clusterPort, "cluster-port", 3334, "cluster seeds.")
+	flag.StringVar(&clusterSeeds, "cluster-seeds", "", "cluster port.")
+	flag.Parse()
+
+	listener, err := net.Listen("tcp", ":" + strconv.Itoa(port))
+	if err != nil {
+		log.Fatal(err)
 	}
-	listener, err := net.Listen("tcp", ":" + port)
+	seeds := make([]string, 0)
+	if clusterSeeds != ""{
+		seeds = strings.Split(clusterSeeds, ",")
+	}
+	err = cluster.Init(clusterPort, seeds)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,8 +64,14 @@ func Run(args []string) {
 				return
 			}
 			err = c.Accept(func(msg protocol.Msg, c *xnet.Conn) {
-				resp := events.Process(msg, c)
+				event := model.Event{}
+				json.Unmarshal(msg.Data, &event)
+				event.From = chats.Client(c)
+				resp := events.Process(msg.ID, event)
 				if resp != nil {
+					if resp.Code == 0 && cluster.BroadcastEvents[event.Type] {
+						cluster.Broadcast(json.Marshal(event))
+					}
 					err := c.Write(protocol.Msg{
 						ID: msg.ID,
 						Data: json.Marshal(resp),

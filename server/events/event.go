@@ -2,8 +2,6 @@ package events
 
 import (
 	"github.com/awesome-cmd/chat/core/model"
-	"github.com/awesome-cmd/chat/core/net"
-	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"github.com/awesome-cmd/chat/server/chats"
 	"strconv"
@@ -72,12 +70,9 @@ var processors = map[string]processor{
 
 type processor func(id int64, event model.Event) *model.Resp
 
-func Process(msg protocol.Msg, c *net.Conn) *model.Resp{
-	event := model.Event{}
-	json.Unmarshal(msg.Data, &event)
-	event.From = chats.Client(c)
-	if processor, ok := processors[event.Type]; ok{
-		return processor(msg.ID, event)
+func Process(msgId int64, event model.Event) *model.Resp{
+	if processor, ok := processors[event.Type]; ok {
+		return processor(msgId, event)
 	}
 	return event.Resp(500, nil, "unsupported event.")
 }
