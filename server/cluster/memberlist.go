@@ -96,15 +96,15 @@ func Broadcast(data []byte) {
 type eventDelegate struct{}
 
 func (ed *eventDelegate) NotifyJoin(node *memberlist.Node) {
-	log.Printf("A node has joined: %s\n" + node.String())
+	log.Printf("A node has joined: %s\n", node.String())
 }
 
 func (ed *eventDelegate) NotifyLeave(node *memberlist.Node) {
-	log.Printf("A node has left: %s\n" + node.String())
+	log.Printf("A node has left: %s\n", node.String())
 }
 
 func (ed *eventDelegate) NotifyUpdate(node *memberlist.Node) {
-	log.Printf("A node was updated: %s\n" + node.String())
+	log.Printf("A node was updated: %s\n", node.String())
 }
 
 func Init(port int, seeds []string) error{
