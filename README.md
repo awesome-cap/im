@@ -5,11 +5,11 @@ go get -u github.com/awesome-cmd/chat
 ```
 run server:
 ```powershell
-chat -s 3333
+chat -s -p 3333
 ```
 run client:
 ```powershell
-chat -c nico
+chat -c -n nico
 ```
 client's usage:
 ```powershell
