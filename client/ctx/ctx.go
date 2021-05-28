@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/awesome-cmd/chat/core/model"
-	"github.com/awesome-cmd/chat/core/net"
+	xnet "github.com/awesome-cmd/chat/core/net"
 	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
+	"math/rand"
+	"net"
 	"strconv"
 	"time"
 )
@@ -19,8 +21,11 @@ var(
 type ChatContext struct {
 	Name string `json:"name"`
 
-	conn *net.Conn
+	conn *xnet.Conn
 	broadcast chan []byte
+	server int
+	chatId int64
+	servers []string
 	notifies map[int64]chan []byte
 }
 
@@ -32,7 +37,7 @@ func NewContext(name string) *ChatContext{
 	}
 }
 
-func (c *ChatContext) Conn() *net.Conn{
+func (c *ChatContext) Conn() *xnet.Conn{
 	return c.conn
 }
 
@@ -59,27 +64,82 @@ func (c *ChatContext) OffListenerBroadcast(){
 	c.broadcast <- []byte{0}
 }
 
-func (c *ChatContext) BindConn(conn *net.Conn){
+func (c *ChatContext) Connect(servers []string) error{
+	c.servers = servers
+	c.server = rand.Intn(len(servers))
+	err := c.connect(c.servers, c.server)
+	if err != nil{
+		return err
+	}
+	async.Async(func() {
+		for{
+			err := c.conn.Accept(func(msg protocol.Msg, conn *xnet.Conn) {
+				if ch, ok := c.notifies[msg.ID]; ok{
+					ch <- msg.Data
+					return
+				}
+				resp := model.Resp{}
+				json.Unmarshal(msg.Data, &resp)
+				if resp.Type == "broadcast" && resp.From.ID != c.conn.ID{
+					c.broadcast <- msg.Data
+				}else if resp.Type == "id" {
+					id, _ := strconv.ParseInt(string(resp.Data), 10, 64)
+					c.conn.ID = id
+				}
+			})
+			if err != nil  {
+				n := 10
+				if len(c.servers) > n {
+					n = len(c.servers)
+				}
+				_ = c.reconnectN(n)
+			}
+		}
+	})
+	return nil
+}
+
+func (c *ChatContext) connect(servers []string, server int) error{
+	tcpAddr, err := net.ResolveTCPAddr("tcp", servers[server])
+	if err != nil{
+		return errors.New(fmt.Sprintf("cd server error: %v", err))
+	}
+	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	if err != nil{
+		return errors.New(fmt.Sprintf("cd server error: %v", err))
+	}
 	if c.conn != nil {
 		_ = c.conn.Close()
 	}
-	c.conn = conn
-	async.Async(func() {
-		_ = c.conn.Accept(func(msg protocol.Msg, conn *net.Conn) {
-			if ch, ok := c.notifies[msg.ID]; ok{
-				ch <- msg.Data
-				return
+	c.conn = xnet.NewConn(conn)
+	return nil
+}
+
+func (c *ChatContext) reconnect() error{
+	c.server ++
+	c.server = c.server % len(c.servers)
+	return c.connect(c.servers, c.server)
+}
+
+func (c *ChatContext) reconnectN(n int) error{
+	var err error
+	fmt.Printf("\nReconnecting")
+	for i := 0; i < n; i ++{
+		fmt.Printf(".")
+		err = c.reconnect()
+		if err == nil{
+			fmt.Printf("Connected\n")
+			if c.chatId > 0 {
+				_ = c.ChangeChat(c.chatId)
 			}
-			resp := model.Resp{}
-			json.Unmarshal(msg.Data, &resp)
-			if resp.Type == "broadcast" && resp.From.ID != c.conn.ID{
-				c.broadcast <- msg.Data
-			}else if resp.Type == "id" {
-				id, _ := strconv.ParseInt(string(resp.Data), 10, 64)
-				c.conn.ID = id
-			}
-		})
-	})
+			return nil
+		}
+	}
+	return err
+}
+
+func (c *ChatContext) Write(data []byte) (int64, error){
+	return c.conn.WriteID(data)
 }
 
 func (c *ChatContext) wait(id int64) ([]byte, error){
@@ -94,7 +154,7 @@ func (c *ChatContext) wait(id int64) ([]byte, error){
 }
 
 func (c *ChatContext) request(requestData []byte) (*model.Resp, error){
-	id, err := c.conn.WriteID(requestData)
+	id, err := c.Write(requestData)
 	if err != nil{
 		return nil, err
 	}
@@ -135,14 +195,15 @@ func (c *ChatContext) CreateChat(name string) (*model.Chat, error){
 	return chat, nil
 }
 
-func (c *ChatContext) ChangeChat(chatId string) error{
+func (c *ChatContext) ChangeChat(chatId int64) error{
 	_, err := c.request(json.Marshal(model.Event{
 		Type: "change",
-		Data: chatId,
+		Data: strconv.FormatInt(chatId, 10),
 	}))
 	if err != nil{
 		return err
 	}
+	c.chatId = chatId
 	return nil
 }
 
@@ -158,7 +219,7 @@ func (c *ChatContext) Rename(name string) error{
 }
 
 func (c *ChatContext) Broadcast(msg string) error{
-	_, err := c.conn.WriteID(json.Marshal(model.Event{
+	_, err := c.Write(json.Marshal(model.Event{
 		Type: "broadcast",
 		Data: msg,
 	}))
@@ -169,11 +230,13 @@ func (c *ChatContext) Broadcast(msg string) error{
 }
 
 func (c *ChatContext) Leave() error{
-	_, err := c.conn.WriteID(json.Marshal(model.Event{
+	_, err := c.Write(json.Marshal(model.Event{
 		Type: "leave",
 	}))
 	if err != nil{
 		return err
 	}
+	c.chatId = 0
 	return nil
 }
+

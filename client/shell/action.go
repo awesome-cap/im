@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/awesome-cmd/chat/client/render"
-	xnet "github.com/awesome-cmd/chat/core/net"
-	"math/rand"
-	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -125,16 +123,10 @@ func initRootActions(){
 			if v.name == args[1] {
 				serverInfo := strings.Split(v.desc, "|")
 				servers := strings.Split(serverInfo[0], ",")
-				server := servers[rand.Intn(len(servers))]
-				tcpAddr, err := net.ResolveTCPAddr("tcp", server)
+				err := s.ctx.Connect(servers)
 				if err != nil{
-					return "", errors.New(fmt.Sprintf("cd server error: %v", err))
+					return "", err
 				}
-				conn, err := net.DialTCP("tcp", nil, tcpAddr)
-				if err != nil{
-					return "", errors.New(fmt.Sprintf("cd server error: %v", err))
-				}
-				s.ctx.BindConn(xnet.NewConn(conn))
 				_ = s.ctx.Rename(s.ctx.Name)
 				break
 			}
@@ -172,16 +164,22 @@ func initServerActions(){
 		if len(args) != 2 {
 			return "", errors.New("vim $chatId")
 		}
-		err := s.ctx.ChangeChat(args[1])
+		chatId, _ := strconv.ParseInt(args[1], 10, 64)
+		err := s.ctx.ChangeChat(chatId)
 		if err != nil {
 			return "", errors.New(fmt.Sprintf("vim chat err: %v", err))
 		}
 		s.ctx.ListenerBroadcast()
 		for {
-			_, _ = render.Readline()
+			msg, _ := render.Readline()
+			if string(msg) == ":q" {
+				if s.ctx.Leave() == nil {
+					break
+				}
+			}
 			s.ctx.OffListenerBroadcast()
 			fmt.Printf("%s %s: ", time.Now().Format("2006-01-02 15:04:05"), s.ctx.Name)
-			msg, _ := render.Readline()
+			msg, _ = render.Readline()
 			if string(msg) == ":q" {
 				if s.ctx.Leave() == nil {
 					break
