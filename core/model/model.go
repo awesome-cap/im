@@ -34,6 +34,7 @@ type Chat struct {
 	Name string `json:"name"`
 	Creator string `json:"creator"`
 	CreateID int64 `json:"createId"`
+	CreateTime time.Time`json:"createTime"`
 }
 
 type Resp struct {

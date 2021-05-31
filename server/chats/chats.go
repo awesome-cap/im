@@ -8,6 +8,7 @@ import (
 	"github.com/awesome-cmd/chat/core/util/json"
 	"sort"
 	"sync/atomic"
+	"time"
 )
 
 var (
@@ -39,6 +40,7 @@ func Create(c *model.Client, name string) *model.Chat{
 		Name: name,
 		Creator: c.Name,
 		CreateID: c.ID,
+		CreateTime: time.Now(),
 	}
 	chats[chat.ID] = chat
 	chatClients[chat.ID] = map[int64]bool{}

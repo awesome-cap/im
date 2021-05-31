@@ -139,14 +139,24 @@ func initRootActions(){
 }
 
 func initServerActions(){
-	serverActions.registerActions([]string{"ls", "ll"}, func(s *shell, inputs []byte) (s2 string, e error) {
+	serverActions.registerAction("ls", func(s *shell, inputs []byte) (s2 string, e error) {
 		chats, err := s.ctx.Chats()
 		if err != nil{
 			return "", err
 		}
 		builder := bytes.Buffer{}
 		for _, v := range chats {
-			builder.WriteString(fmt.Sprintf("%d. %s\n", v.ID, v.Name))
+			builder.WriteString(fmt.Sprintf("%-4d %s\n", v.ID, v.Name))
+		}
+		return builder.String(), nil
+	}).registerAction("ll", func(s *shell, inputs []byte) (s2 string, e error) {
+		chats, err := s.ctx.Chats()
+		if err != nil{
+			return "", err
+		}
+		builder := bytes.Buffer{}
+		for _, v := range chats {
+			builder.WriteString(fmt.Sprintf("%-4d %-10s %v  %s\n", v.ID, v.Creator, v.CreateTime.Format("Jan 02 15:04"), v.Name))
 		}
 		return builder.String(), nil
 	}).registerAction("touch", func(s *shell, inputs []byte) (s2 string, e error) {

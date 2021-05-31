@@ -53,7 +53,6 @@ func (s *shell) refreshServerList() error{
 		}
 		json.Unmarshal([]byte(resp), &serverList)
 	}
-	serverList = []string{"127.0.0.1:3333|nico"}
 	if len(serverList) == 0 {
 		return errors.New("no available server. ")
 	}
