@@ -29,8 +29,8 @@ func Run() {
 	flag.IntVar(&port, "p", 3333, "server port.")
 	flag.Uint64Var(&id, "id", 1, "start id.")
 	flag.Uint64Var(&step, "step", 10, "id step.")
-	flag.IntVar(&clusterPort, "cluster-port", 3334, "cluster seeds.")
-	flag.StringVar(&clusterSeeds, "cluster-seeds", "", "cluster port.")
+	flag.IntVar(&clusterPort, "-cluster-port", 3334, "cluster port.")
+	flag.StringVar(&clusterSeeds, "-cluster-seeds", "", "cluster seeds.")
 	flag.Parse()
 
 	// id
