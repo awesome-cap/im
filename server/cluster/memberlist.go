@@ -20,6 +20,8 @@ var (
 	broadcasts *memberlist.TransmitLimitedQueue
 	BroadcastEvents = map[string]bool{
 		"broadcast": true,
+		"create": true,
+		"delete": true,
 	}
 )
 
@@ -67,11 +69,13 @@ func (d *delegate) LocalState(join bool) []byte {
 }
 
 func (d *delegate) MergeRemoteState(buf []byte, join bool) {
-	chatList := map[int64]*model.Chat{}
-	json.Unmarshal(buf, &chatList)
-	d.mtx.RLock()
-	defer d.mtx.RUnlock()
-	chats.SetChats(chatList)
+	if join {
+		chatList := map[int64]*model.Chat{}
+		json.Unmarshal(buf, &chatList)
+		d.mtx.RLock()
+		defer d.mtx.RUnlock()
+		chats.SetChats(chatList)
+	}
 }
 
 func Broadcast(data []byte) {
@@ -102,25 +106,25 @@ func Start(port int, seeds []string) error{
 	config.Name = hostname + "-" + strconv.Itoa(port)
 	config.BindPort = port
 	config.AdvertisePort = port
-	delegate := &delegate{}
-	config.Delegate = delegate
-	//config.Events = &eventDelegate{}
 	m, err := memberlist.Create(config)
 	if err != nil{
 		return err
-	}
-	if len(seeds) > 0 {
-		suc, err := m.Join(seeds)
-		if err != nil {
-			return err
-		}
-		log.Printf("Joined successful cluster num: %d \n", suc)
 	}
 	broadcasts = &memberlist.TransmitLimitedQueue{
 		NumNodes: func() int {
 			return m.NumMembers()
 		},
 		RetransmitMult: 1,
+	}
+	delegate := &delegate{}
+	config.Delegate = delegate
+
+	if len(seeds) > 0 {
+		suc, err := m.Join(seeds)
+		if err != nil {
+			return err
+		}
+		log.Printf("Joined successful cluster num: %d \n", suc)
 	}
 	return nil
 }

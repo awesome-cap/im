@@ -13,6 +13,7 @@ type Conn struct {
 	ID int64 `json:"id"`
 
 	msgID int64
+	state int
 	conn net.Conn
 	streams []byte
 }
@@ -35,17 +36,26 @@ func (c *Conn) read() error{
 	return nil
 }
 
-func (c *Conn) parse() (*protocol.Msg, error) {
-	msg, index, err := protocol.Decode(c.streams)
-	if err != nil{
-		return nil, err
+func (c *Conn) parse() ([]*protocol.Msg, error) {
+	msgs := make([]*protocol.Msg, 0)
+	for {
+		msg, index, err := protocol.Decode(c.streams)
+		if err != nil{
+			break
+		}
+		msgs = append(msgs, msg)
+		c.streams = c.streams[index:]
 	}
-	c.streams = c.streams[index:]
-	return msg, nil
+	return msgs, nil
 }
 
 func (c *Conn) Close() error {
+	c.state = 1
 	return c.conn.Close()
+}
+
+func (c *Conn) State() int {
+	return c.state
 }
 
 func (c *Conn) Accept(apply func(msg protocol.Msg, c *Conn)) error{
@@ -54,11 +64,12 @@ func (c *Conn) Accept(apply func(msg protocol.Msg, c *Conn)) error{
 		if err != nil {
 			return err
 		}
-		msg, err := c.parse()
+		msgs, err := c.parse()
 		if err != nil {
 			return err
 		}
-		if msg != nil {
+		for _, m := range msgs{
+			msg := m
 			async.Async(func() {
 				apply(*msg, c)
 			})

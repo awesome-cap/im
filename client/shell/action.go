@@ -127,7 +127,6 @@ func initRootActions(){
 				if err != nil{
 					return "", err
 				}
-				_ = s.ctx.Rename(s.ctx.Name)
 				break
 			}
 		}
@@ -168,7 +167,18 @@ func initServerActions(){
 		if err != nil {
 			return "", errors.New(fmt.Sprintf("create chat err: %v", err))
 		}
-		return fmt.Sprintf("Create successful ! The new chat id is %d\n", chat.ID), nil
+		return fmt.Sprintf("touch successful: %d\n", chat.ID), nil
+	}).registerAction("rm", func(s *shell, inputs []byte) (s2 string, e error) {
+		args := strings.Split(string(inputs), " ")
+		if len(args) != 2 {
+			return "", errors.New("rm $chatId")
+		}
+		chatId, _ := strconv.ParseInt(args[1], 10, 64)
+		_, err := s.ctx.DeleteChat(chatId)
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("rm chat err: %v", err))
+		}
+		return "", nil
 	}).registerAction("vim", func(s *shell, inputs []byte) (s2 string, e error) {
 		args := strings.Split(string(inputs), " ")
 		if len(args) != 2 {

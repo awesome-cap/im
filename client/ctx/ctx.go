@@ -73,9 +73,11 @@ func (c *ChatContext) Connect(servers []string) error{
 	}
 	async.Async(func() {
 		for{
+			_ = c.Rename(c.Name)
 			err := c.conn.Accept(func(msg protocol.Msg, conn *xnet.Conn) {
 				if ch, ok := c.notifies[msg.ID]; ok{
 					ch <- msg.Data
+					delete(c.notifies, msg.ID)
 					return
 				}
 				resp := model.Resp{}
@@ -87,7 +89,7 @@ func (c *ChatContext) Connect(servers []string) error{
 					c.conn.ID = id
 				}
 			})
-			if err != nil  {
+			if err != nil && c.conn.State() == 0 {
 				n := 10
 				if len(c.servers) > n {
 					n = len(c.servers)
@@ -139,7 +141,8 @@ func (c *ChatContext) reconnectN(n int) error{
 }
 
 func (c *ChatContext) Write(data []byte) (int64, error){
-	return c.conn.WriteID(data)
+	id, err := c.conn.WriteID(data)
+	return id, err
 }
 
 func (c *ChatContext) wait(id int64) ([]byte, error){
@@ -195,6 +198,19 @@ func (c *ChatContext) CreateChat(name string) (*model.Chat, error){
 	return chat, nil
 }
 
+func (c *ChatContext) DeleteChat(chatId int64) (*model.Chat, error){
+	resp, err := c.request(json.Marshal(model.Event{
+		Type: "delete",
+		Data: strconv.FormatInt(chatId, 10),
+	}))
+	if err != nil{
+		return nil, err
+	}
+	chat := &model.Chat{}
+	json.Unmarshal(resp.Data, chat)
+	return chat, nil
+}
+
 func (c *ChatContext) ChangeChat(chatId int64) error{
 	_, err := c.request(json.Marshal(model.Event{
 		Type: "change",
@@ -208,7 +224,7 @@ func (c *ChatContext) ChangeChat(chatId int64) error{
 }
 
 func (c *ChatContext) Rename(name string) error{
-	_, err := c.request(json.Marshal(model.Event{
+	_, err := c.Write(json.Marshal(model.Event{
 		Type: "rename",
 		Data: name,
 	}))
