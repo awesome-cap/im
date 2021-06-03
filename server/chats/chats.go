@@ -6,37 +6,29 @@ import (
 	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
+	"github.com/awesome-cmd/chat/server/cluster"
 	"sort"
-	"sync/atomic"
 	"time"
 )
 
 var (
-	ChatId int64 = 0
-	ClientId int64 = 0
-	IdStep int64 = 100
-
 	chats = map[int64]*model.Chat{}
 	chatClients = map[int64]map[int64]bool{}
 	clients = map[int64]*model.Client{}
 	clientConn = map[int64]*net.Conn{}
 )
 
-func nextChatID() int64{
-	return atomic.AddInt64(&ChatId, IdStep)
-}
-
-func nextClientID() int64{
-	return atomic.AddInt64(&ClientId, IdStep)
-}
-
 func Change(c *model.Client, chatId int64) bool{
 	return Join(c, chatId)
 }
 
-func Create(c *model.Client, name string) *model.Chat{
+func Create(c *model.Client, name string) (*model.Chat, error){
+	id, err := cluster.NextID()
+	if err != nil{
+		return nil, err
+	}
 	chat := &model.Chat{
-		ID: nextChatID(),
+		ID: id,
 		Name: name,
 		Creator: c.Name,
 		CreateID: c.ID,
@@ -44,7 +36,7 @@ func Create(c *model.Client, name string) *model.Chat{
 	}
 	chats[chat.ID] = chat
 	chatClients[chat.ID] = map[int64]bool{}
-	return chat
+	return chat, nil
 }
 
 func Delete(c *model.Client, chatId int64) bool{
@@ -88,8 +80,7 @@ func Reply(c *model.Client, id int64, msg *model.Resp){
 }
 
 func BindClient(conn *net.Conn) {
-	clientId := nextClientID()
-	conn.ID = clientId
+	conn.ID = time.Now().UnixNano()
 	clientConn[conn.ID] = conn
 	clients[conn.ID] = &model.Client{
 		ID: conn.ID,

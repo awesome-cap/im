@@ -11,17 +11,27 @@ import (
 	"github.com/awesome-cmd/chat/server/events"
 	"github.com/hashicorp/memberlist"
 	"log"
-	"os"
+	"net"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var (
+	ml *memberlist.Memberlist
 	broadcasts *memberlist.TransmitLimitedQueue
+	did = &DID{}
+
 	BroadcastEvents = map[string]bool{
 		"broadcast": true,
 		"create": true,
 		"delete": true,
+	}
+	didEvents = map[string]bool{
+		apply: true,
+		applyAccess: true,
+		applyRefuse: true,
+		increment: true,
 	}
 )
 
@@ -55,7 +65,11 @@ func (d *delegate) NodeMeta(limit int) []byte {
 func (d *delegate) NotifyMsg(b []byte) {
 	event := model.Event{}
 	json.Unmarshal(b, &event)
-	events.Process(0, event)
+	if BroadcastEvents[event.Type] {
+		events.Process(0, event)
+	}else if didEvents[event.Type] {
+		did.process(event)
+	}
 }
 
 func (d *delegate) GetBroadcasts(overhead, limit int) [][]byte {
@@ -86,6 +100,10 @@ func Broadcast(data []byte) {
 	}
 }
 
+func LocalNode() *memberlist.Node{
+	return ml.LocalNode()
+}
+
 type eventDelegate struct{}
 
 func (ed *eventDelegate) NotifyJoin(node *memberlist.Node) {
@@ -100,19 +118,24 @@ func (ed *eventDelegate) NotifyUpdate(node *memberlist.Node) {
 	log.Printf("A node was updated: %s\n", node.String())
 }
 
+func localName(port int) string{
+	interfaces, _ := net.Interfaces()
+	return interfaces[0].HardwareAddr.String() + "-" + strconv.Itoa(port) + "-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
 func Start(port int, seeds []string) error{
-	hostname, _ := os.Hostname()
 	config := memberlist.DefaultLocalConfig()
-	config.Name = hostname + "-" + strconv.Itoa(port)
+	config.Name = localName(port)
 	config.BindPort = port
 	config.AdvertisePort = port
-	m, err := memberlist.Create(config)
+	var err error
+	ml, err = memberlist.Create(config)
 	if err != nil{
 		return err
 	}
 	broadcasts = &memberlist.TransmitLimitedQueue{
 		NumNodes: func() int {
-			return m.NumMembers()
+			return ml.NumMembers()
 		},
 		RetransmitMult: 1,
 	}
@@ -120,7 +143,7 @@ func Start(port int, seeds []string) error{
 	config.Delegate = delegate
 
 	if len(seeds) > 0 {
-		suc, err := m.Join(seeds)
+		suc, err := ml.Join(seeds)
 		if err != nil {
 			return err
 		}

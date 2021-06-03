@@ -1,7 +1,6 @@
 package events
 
 import (
-	"fmt"
 	"github.com/awesome-cmd/chat/core/model"
 	"github.com/awesome-cmd/chat/core/util/json"
 	"github.com/awesome-cmd/chat/server/chats"
@@ -20,7 +19,6 @@ var processors = map[string]processor{
 		return event.Resp(0, nil, "success")
 	},
 	"chats": func(id int64, event model.Event) *model.Resp {
-		fmt.Println("chats")
 		return event.Resp(0, json.Marshal(chats.Chats()), "success")
 	},
 	"change": func(id int64, event model.Event) *model.Resp {
@@ -45,7 +43,10 @@ var processors = map[string]processor{
 		if len([]rune(event.Data)) > 30{
 			return event.Resp(500, nil, "chat name length must in 10 char")
 		}
-		chat := chats.Create(event.From, event.Data)
+		chat, err := chats.Create(event.From, event.Data)
+		if err != nil{
+			return event.Resp(500, nil, err.Error())
+		}
 		return event.Resp(0, json.Marshal(chat), "success")
 	},
 	"delete": func(id int64, event model.Event) *model.Resp {

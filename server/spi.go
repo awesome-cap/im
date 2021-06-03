@@ -17,8 +17,6 @@ import (
 )
 
 var (
-	id uint64
-	step uint64
 	port int
 	clusterPort int
 	clusterSeeds string
@@ -27,16 +25,9 @@ var (
 func Run() {
 	flag.Bool("s", true, "")
 	flag.IntVar(&port, "p", 3333, "server port.")
-	flag.Uint64Var(&id, "id", 1, "start id.")
-	flag.Uint64Var(&step, "step", 10, "id step.")
 	flag.IntVar(&clusterPort, "cluster-port", 3334, "cluster port.")
 	flag.StringVar(&clusterSeeds, "cluster-seeds", "", "cluster seeds.")
 	flag.Parse()
-
-	// id
-	chats.ChatId = int64(id)
-	chats.ClientId = int64(id)
-	chats.IdStep = int64(step)
 
 	// cluster
 	seeds := make([]string, 0)
