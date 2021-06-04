@@ -6,12 +6,12 @@ import (
 	"github.com/awesome-cmd/chat/core/protocol"
 	"github.com/awesome-cmd/chat/core/util/async"
 	"github.com/awesome-cmd/chat/core/util/json"
-	"github.com/awesome-cmd/chat/server/cluster"
 	"sort"
 	"time"
 )
 
 var (
+	deletedChats = map[int64]bool{}
 	chats = map[int64]*model.Chat{}
 	chatClients = map[int64]map[int64]bool{}
 	clients = map[int64]*model.Client{}
@@ -22,11 +22,7 @@ func Change(c *model.Client, chatId int64) bool{
 	return Join(c, chatId)
 }
 
-func Create(c *model.Client, name string) (*model.Chat, error){
-	id, err := cluster.NextID()
-	if err != nil{
-		return nil, err
-	}
+func Create(c *model.Client, name string, id int64) (*model.Chat, error){
 	chat := &model.Chat{
 		ID: id,
 		Name: name,
@@ -43,6 +39,7 @@ func Delete(c *model.Client, chatId int64) bool{
 	chat := chats[chatId]
 	if chat != nil && chat.CreateID == c.ID{
 		delete(chats, chatId)
+		deletedChats[chatId] = true
 		if chatClients[chat.ID] != nil {
 			for cid := range chatClients[chat.ID]{
 				if clients[cid] != nil {
@@ -102,15 +99,6 @@ func GetChats() map[int64]*model.Chat{
 	return chats
 }
 
-func SetChats(chatList map[int64]*model.Chat){
-	for k, v := range chatList {
-		chats[k] = v
-		if _, ok := chatClients[k]; ! ok{
-			chatClients[k] = map[int64]bool{}
-		}
-	}
-}
-
 func Client(c *net.Conn) *model.Client{
 	return clients[c.ID]
 }
@@ -139,4 +127,15 @@ func Clean(c *net.Conn){
 		delete(clients, c.ID)
 	}
 	delete(clientConn, c.ID)
+}
+
+func MergeRemoteChats(chatList map[int64]*model.Chat){
+	for k, v := range chatList {
+		if ! deletedChats[v.ID] {
+			chats[k] = v
+			if _, ok := chatClients[k]; ! ok{
+				chatClients[k] = map[int64]bool{}
+			}
+		}
+	}
 }

@@ -70,7 +70,7 @@ func Run() {
 				event := model.Event{}
 				json.Unmarshal(msg.Data, &event)
 				event.From = chats.Client(c)
-				resp := events.Process(msg.ID, event)
+				resp := events.Process(msg.ID, event, cluster.NextID)
 				if cluster.BroadcastEvents[event.Type] {
 					cluster.Broadcast(json.Marshal(event))
 				}

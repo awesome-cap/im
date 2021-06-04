@@ -24,7 +24,6 @@ var (
 
 	BroadcastEvents = map[string]bool{
 		"broadcast": true,
-		"create": true,
 		"delete": true,
 	}
 	didEvents = map[string]bool{
@@ -32,6 +31,7 @@ var (
 		applyAccess: true,
 		applyRefuse: true,
 		increment: true,
+		incremented: true,
 	}
 )
 
@@ -66,9 +66,9 @@ func (d *delegate) NotifyMsg(b []byte) {
 	event := model.Event{}
 	json.Unmarshal(b, &event)
 	if BroadcastEvents[event.Type] {
-		events.Process(0, event)
+		go events.Process(0, event, NextID)
 	}else if didEvents[event.Type] {
-		did.process(event)
+		go did.process(event)
 	}
 }
 
@@ -83,13 +83,11 @@ func (d *delegate) LocalState(join bool) []byte {
 }
 
 func (d *delegate) MergeRemoteState(buf []byte, join bool) {
-	if join {
-		chatList := map[int64]*model.Chat{}
-		json.Unmarshal(buf, &chatList)
-		d.mtx.RLock()
-		defer d.mtx.RUnlock()
-		chats.SetChats(chatList)
-	}
+	chatList := map[int64]*model.Chat{}
+	json.Unmarshal(buf, &chatList)
+	d.mtx.RLock()
+	defer d.mtx.RUnlock()
+	chats.MergeRemoteChats(chatList)
 }
 
 func Broadcast(data []byte) {
@@ -128,6 +126,7 @@ func Start(port int, seeds []string) error{
 	config.Name = localName(port)
 	config.BindPort = port
 	config.AdvertisePort = port
+	config.PushPullInterval = time.Second * 3
 	var err error
 	ml, err = memberlist.Create(config)
 	if err != nil{

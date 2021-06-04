@@ -8,7 +8,7 @@ import (
 )
 
 var processors = map[string]processor{
-	"rename": func(id int64, event model.Event) *model.Resp {
+	"rename": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
 		if len(event.Data) == 0 {
 			return event.Resp(500, nil,  "name can't be empty")
 		}
@@ -18,10 +18,10 @@ var processors = map[string]processor{
 		event.From.Name = event.Data
 		return event.Resp(0, nil, "success")
 	},
-	"chats": func(id int64, event model.Event) *model.Resp {
+	"chats": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
 		return event.Resp(0, json.Marshal(chats.Chats()), "success")
 	},
-	"change": func(id int64, event model.Event) *model.Resp {
+	"change": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
 		chatId, err := strconv.ParseInt(event.Data, 10, 64)
 		if err != nil{
 			return event.Resp(500, nil, "please input correct chat number.")
@@ -32,24 +32,28 @@ var processors = map[string]processor{
 		}
 		return event.Resp(0, nil, "success")
 	},
-	"leave": func(id int64, event model.Event) *model.Resp {
+	"leave": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
 		chats.Leave(event.From)
 		return event.Resp(0, nil, "success")
 	},
-	"create": func(id int64, event model.Event) *model.Resp {
+	"create": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
 		if len(event.Data) == 0 {
 			return event.Resp(500, nil, "chat name can't be empty")
 		}
 		if len([]rune(event.Data)) > 30{
 			return event.Resp(500, nil, "chat name length must in 10 char")
 		}
-		chat, err := chats.Create(event.From, event.Data)
+		id, err := producer()
+		if err != nil {
+			return event.Resp(500, nil, err.Error())
+		}
+		chat, err := chats.Create(event.From, event.Data, id)
 		if err != nil{
 			return event.Resp(500, nil, err.Error())
 		}
 		return event.Resp(0, json.Marshal(chat), "success")
 	},
-	"delete": func(id int64, event model.Event) *model.Resp {
+	"delete": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
 		chatId, err := strconv.ParseInt(event.Data, 10, 64)
 		if err != nil{
 			return event.Resp(500, nil, "please input correct chat number.")
@@ -59,7 +63,7 @@ var processors = map[string]processor{
 		}
 		return event.Resp(500, nil, "fail")
 	},
-	"broadcast": func(id int64, event model.Event) *model.Resp {
+	"broadcast": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
 		if len(event.Data) == 0 {
 			return event.Resp(500, nil, "message can't be empty")
 		}
@@ -71,11 +75,11 @@ var processors = map[string]processor{
 	},
 }
 
-type processor func(id int64, event model.Event) *model.Resp
+type processor func(id int64, event model.Event, producer func() (int64, error)) *model.Resp
 
-func Process(msgId int64, event model.Event) *model.Resp{
+func Process(msgId int64, event model.Event, producer func() (int64, error)) *model.Resp{
 	if processor, ok := processors[event.Type]; ok {
-		return processor(msgId, event)
+		return processor(msgId, event, producer)
 	}
 	return event.Resp(500, nil, "unsupported event.")
 }

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"github.com/awesome-cmd/chat/core/model"
 	"github.com/awesome-cmd/chat/core/util/json"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,10 +18,13 @@ const(
 	applyAccess = "incr-apply-access"
 	applyRefuse = "incr-apply-refuse"
 	increment = "incr-increment"
+	incremented = "incr-incremented"
 )
 
 type DID struct {
-	id int64
+	ID int64 `json:"id"`
+	StartTime int64 `json:"startTime"`
+	Node string `json:"node"`
 
 	// 0 finished
 	// 1 starting
@@ -33,12 +35,13 @@ type DID struct {
 	// -1 refuse
 	states map[string]int
 
+	
 	notify chan bool
 	sync.RWMutex
 }
 
 func NextID() (int64, error){
-	tryTimes := 1000
+	tryTimes := 3
 	for i := 0; i < tryTimes; i ++{
 		id, err := did.next()
 		if err == nil {
@@ -51,26 +54,43 @@ func NextID() (int64, error){
 func (d *DID) next() (int64, error){
 	d.start()
 	defer d.finished()
-	d.broadcast(apply, "")
-	accessed, err := d.waitForReply()
-	if err != nil{
-		return 0, err
+	if len(d.states) > 0 {
+		d.broadcast(apply)
+		accessed, err := d.waitForReply()
+		if err != nil{
+			return 0, err
+		}
+		if ! accessed {
+			return 0, errors.New("refused")
+		}
 	}
-	if ! accessed {
-		return 0, errors.New("refused")
-	}
+	d.state = 2
 	d.increment()
-	d.broadcast(increment, strconv.FormatInt(d.id, 10))
-	return d.id, nil
+	d.broadcast(increment)
+	//if len(d.states) > 0{
+	//	d.broadcast(increment)
+	//	_, err := d.waitForReply()
+	//	if err != nil{
+	//		fmt.Printf("waitForReply2 err: %v \n", err)
+	//		d.decrement()
+	//		return 0, err
+	//	}
+	//}
+	return d.ID, nil
 }
 
 func (d *DID) increment(){
-	atomic.AddInt64(&d.id, 1)
+	atomic.AddInt64(&d.ID, 1)
+}
+
+func (d *DID) decrement(){
+	atomic.AddInt64(&d.ID, -1)
 }
 
 func (d *DID) start(){
 	d.Lock()
 	d.state = 1
+	d.StartTime = time.Now().UnixNano()
 	d.notify = make(chan bool)
 	d.states = map[string]int{}
 	for _, v := range ml.Members() {
@@ -87,24 +107,24 @@ func (d *DID) finished(){
 }
 
 func (d *DID) process(event model.Event){
-	form := event.From.Name
+	remote := DID{}
+	json.Unmarshal([]byte(event.Data), &remote)
 	switch event.Type {
 	case apply:
 		t := applyAccess
-		if d.state != 0 {
+		if d.state != 0 && d.StartTime <= remote.StartTime{
 			t = applyRefuse
 		}
-		d.broadcast(t, strconv.FormatInt(d.id, 10))
+		d.broadcast(t)
 	case applyAccess, applyRefuse:
-		if _, ok := d.states[form]; ok && d.state == 1{
+		if _, ok := d.states[remote.Node]; ok && d.state == 1{
 			if event.Type == applyAccess {
-				d.states[form] = 1
+				d.states[remote.Node] = 1
+				if d.ID < remote.ID {
+					d.ID = remote.ID
+				}
 			}else{
-				d.states[form] = -1
-			}
-			remoteId, _ := strconv.ParseInt(event.Data, 10, 64)
-			if d.id < remoteId {
-				d.id = remoteId
+				d.states[remote.Node] = -1
 			}
 			completed := true
 			accessed := true
@@ -113,7 +133,7 @@ func (d *DID) process(event model.Event){
 					completed = false
 					break
 				}
-				if state == 2 {
+				if state == -1 {
 					accessed = false
 				}
 			}
@@ -122,18 +142,31 @@ func (d *DID) process(event model.Event){
 			}
 		}
 	case increment:
-		d.id, _ = strconv.ParseInt(event.Data, 10, 64)
+		d.increment()
+		//d.broadcast(incremented)
+	case incremented:
+		if  _, ok := d.states[remote.Node]; ok && d.state == 2 {
+			d.states[remote.Node] = 2
+			completed := true
+			for _, state := range d.states {
+				if state == 0 {
+					completed = false
+					break
+				}
+			}
+			if completed {
+				d.notify <- true
+			}
+		}
 	}
 }
 
-func (d *DID) broadcast(t string, data string){
+func (d *DID) broadcast(t string){
+	d.Node = ml.LocalNode().Name
 	broadcasts.QueueBroadcast(&broadcast{
 		msg: json.Marshal(model.Event{
 			Type: t,
-			Data: data,
-			From: &model.Client{
-				Name: ml.LocalNode().Name,
-			},
+			Data: string(json.Marshal(d)),
 		}),
 	})
 }
