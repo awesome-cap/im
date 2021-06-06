@@ -61,18 +61,24 @@ func initBaseActions(){
 		if len(args) != 2 {
 			return "", errors.New("cd $dirname")
 		}
-		dirs := strings.Split(args[1], "/")
-		for _, dir := range dirs {
-			if dir == ".." {
-				if s.position.parent != nil {
-					s.position = s.position.parent
-				}
-			}else if dir == "."{
-				// no things to do!
-			}else{
-				for _, v := range s.position.child {
-					if v.name == dir {
-						s.position = v
+		if args[1] == "/" {
+			for s.position.parent != nil {
+				s.position = s.position.parent
+			}
+		}else{
+			dirs := strings.Split(args[1], "/")
+			for _, dir := range dirs {
+				if dir == ".." {
+					if s.position.parent != nil {
+						s.position = s.position.parent
+					}
+				}else if dir == "."{
+					// no things to do!
+				}else{
+					for _, v := range s.position.child {
+						if v.name == dir {
+							s.position = v
+						}
 					}
 				}
 			}

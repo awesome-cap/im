@@ -18,12 +18,14 @@ var servers = []string{
 type shell struct {
 	ctx *ctx.ChatContext
 	position *directory
+	addrs string
 }
 
-func New(name string) *shell{
+func New(name string, addrs string) *shell{
 	return &shell{
 		ctx: ctx.NewContext(name),
 		position: root,
+		addrs: addrs,
 	}
 }
 
@@ -48,14 +50,17 @@ func (s *shell) Start(){
 
 func (s *shell) refreshServerList() error{
 	serverList := make([]string, 0)
-	for _, server := range servers {
-		resp, err := http.Get(server)
-		if err != nil && resp == ""{
-			continue
+	if s.addrs != "" {
+		serverList = append(serverList, s.addrs + "|default")
+	}else{
+		for _, server := range servers {
+			resp, err := http.Get(server)
+			if err != nil && resp == ""{
+				continue
+			}
+			json.Unmarshal([]byte(resp), &serverList)
 		}
-		json.Unmarshal([]byte(resp), &serverList)
 	}
-	serverList = []string{"127.0.0.1:4001|nico"}
 	if len(serverList) == 0 {
 		return errors.New("no available server. ")
 	}
