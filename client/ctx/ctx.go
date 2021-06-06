@@ -127,6 +127,7 @@ func (c *ChatContext) reconnectN(n int) error{
 	var err error
 	fmt.Printf("\nReconnecting")
 	for i := 0; i < n; i ++{
+		time.Sleep(1 * time.Second)
 		fmt.Printf(".")
 		err = c.reconnect()
 		if err == nil{
