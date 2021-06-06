@@ -70,6 +70,9 @@ var processors = map[string]processor{
 		if len([]rune(event.Data)) > 65535{
 			return event.Resp(500, nil, "message length must in 65535 char")
 		}
+		if chats.Exist(event.From.ChatID) {
+			return event.Resp(500, nil, "chat not exist")
+		}
 		chats.Broadcast(event.From, id, event.Resp(0, []byte(event.Data), "success"))
 		return nil
 	},

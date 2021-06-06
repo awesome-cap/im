@@ -32,9 +32,11 @@ type Client struct {
 type Chat struct {
 	ID int64 `json:"id"`
 	Name string `json:"name"`
+	Deleted bool `json:"deleted"`
 	Creator string `json:"creator"`
 	CreateID int64 `json:"createId"`
 	CreateTime time.Time`json:"createTime"`
+	LastActiveTime time.Time `json:"lastActiveTime"`
 }
 
 type Resp struct {

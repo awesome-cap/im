@@ -10,6 +10,7 @@ import (
 	"github.com/awesome-cmd/chat/server/chats"
 	"github.com/awesome-cmd/chat/server/cluster"
 	"github.com/awesome-cmd/chat/server/events"
+	"github.com/awesome-cmd/chat/server/task"
 	"log"
 	"net"
 	"strconv"
@@ -38,6 +39,9 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// task
+	task.Start()
 
 	// server
 	listener, err := net.Listen("tcp", ":" + strconv.Itoa(port))

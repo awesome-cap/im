@@ -35,12 +35,14 @@ func (s *shell) Start(){
 			fmt.Println(err.Error())
 			continue
 		}
-		res, err := s.position.action(s, inputs)
-		if err != nil{
-			fmt.Println(err.Error())
-			continue
+		if strings.TrimSpace(string(inputs)) != "" {
+			res, err := s.position.action(s, inputs)
+			if err != nil{
+				fmt.Println(err.Error())
+				continue
+			}
+			fmt.Print(res)
 		}
-		fmt.Print(res)
 	}
 }
 
@@ -53,6 +55,7 @@ func (s *shell) refreshServerList() error{
 		}
 		json.Unmarshal([]byte(resp), &serverList)
 	}
+	serverList = []string{"127.0.0.1:4001|nico"}
 	if len(serverList) == 0 {
 		return errors.New("no available server. ")
 	}
