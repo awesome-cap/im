@@ -1,5 +1,5 @@
 # Introduce
-Golang实现的去中心化的群聊系统。
+**dchat** (Decentralized Chat) 一款去中心化的聊天系统。
 # Features
  - 轻量级
  - Unix指令交互
@@ -14,25 +14,25 @@ go get -u github.com/awesome-cmd/dchat
 ```
 ## Server:
 ```powershell
-chat -s -p 3333
+dchat -s -p 3333
 ```
  - **-p**: 面向客户端的TCP端口，默认为3333
- - **-cluster-port**: 内部集群通讯端口，默认为3334
- - **-cluster-seeds**: 内部集群种子节点地址，多个用逗号分隔
+ - **-cluster-port**: 集群通讯端口，默认为3334（可缺省）
+ - **-cluster-seeds**: 集群其它部分节点地址，多个用逗号分隔（可缺省）
 
 集群运行示例:
 ```powershell
-chat -s -p 3333 -cluster-port 3334
-chat -s -p 4001 -cluster-port 4002 -cluster-seeds 127.0.0.1:3334
+dchat -s -p 3333 -cluster-port 3334
+dchat -s -p 4001 -cluster-port 4002 -cluster-seeds 127.0.0.1:3334
 ```
 ## Client:
 ```powershell
-chat -c -n nico
+dchat -c -n nico
 ```
  - **-n**: 本地昵称
- - **-addrs**: 服务器地址，多个用逗号分隔
+ - **-addrs**: 服务器地址，多个用逗号分隔（可缺省）
  
 运行示例:
 ```powershell
-chat -c -n nico -addrs 127.0.0.1:3333
+dchat -c -n nico -addrs 127.0.0.1:3333
 ```

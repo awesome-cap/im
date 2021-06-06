@@ -17,8 +17,8 @@ go get -u github.com/awesome-cmd/dchat
 dchat -s -p 3333
 ```
  - **-p**: 面向客户端的TCP端口，默认为3333
- - **-cluster-port**: 内部集群通讯端口，默认为3334（可缺省）
- - **-cluster-seeds**: 内部集群种子节点地址，多个用逗号分隔（可缺省）
+ - **-cluster-port**: 集群通讯端口，默认为3334（可缺省）
+ - **-cluster-seeds**: 集群其它部分节点地址，多个用逗号分隔（可缺省）
 
 集群运行示例:
 ```powershell
