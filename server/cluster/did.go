@@ -6,8 +6,8 @@ package cluster
 
 import (
 	"errors"
-	"github.com/awesome-cmd/chat/core/model"
-	"github.com/awesome-cmd/chat/core/util/json"
+	"github.com/awesome-cmd/dchat/core/model"
+	"github.com/awesome-cmd/dchat/core/util/json"
 	"sync"
 	"sync/atomic"
 	"time"

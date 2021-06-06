@@ -5,10 +5,10 @@
 package cluster
 
 import (
-	"github.com/awesome-cmd/chat/core/model"
-	"github.com/awesome-cmd/chat/core/util/json"
-	"github.com/awesome-cmd/chat/server/chats"
-	"github.com/awesome-cmd/chat/server/events"
+	"github.com/awesome-cmd/dchat/core/model"
+	"github.com/awesome-cmd/dchat/core/util/json"
+	"github.com/awesome-cmd/dchat/server/chats"
+	"github.com/awesome-cmd/dchat/server/events"
 	"github.com/hashicorp/memberlist"
 	"log"
 	"net"

@@ -1,11 +1,11 @@
 package chats
 
 import (
-	"github.com/awesome-cmd/chat/core/model"
-	"github.com/awesome-cmd/chat/core/net"
-	"github.com/awesome-cmd/chat/core/protocol"
-	"github.com/awesome-cmd/chat/core/util/async"
-	"github.com/awesome-cmd/chat/core/util/json"
+	"github.com/awesome-cmd/dchat/core/model"
+	"github.com/awesome-cmd/dchat/core/net"
+	"github.com/awesome-cmd/dchat/core/protocol"
+	"github.com/awesome-cmd/dchat/core/util/async"
+	"github.com/awesome-cmd/dchat/core/util/json"
 	"sort"
 	"time"
 )

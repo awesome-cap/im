@@ -10,7 +10,7 @@ Golang实现的去中心化的群聊系统。
 # Start
 ## Install
 ```golang
-go get -u github.com/awesome-cmd/chat
+go get -u github.com/awesome-cmd/dchat
 ```
 ## Server:
 ```powershell

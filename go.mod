@@ -1,4 +1,4 @@
-module github.com/awesome-cmd/chat
+module github.com/awesome-cmd/dchat
 
 go 1.15
 

@@ -5,8 +5,8 @@
 package main
 
 import (
-	"github.com/awesome-cmd/chat/client"
-	"github.com/awesome-cmd/chat/server"
+	"github.com/awesome-cmd/dchat/client"
+	"github.com/awesome-cmd/dchat/server"
 	"log"
 	"os"
 )

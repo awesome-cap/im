@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/awesome-cmd/chat/client/render"
+	"github.com/awesome-cmd/dchat/client/render"
 	"os"
 	"strconv"
 	"strings"
