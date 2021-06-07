@@ -24,6 +24,7 @@ var (
 
 	BroadcastEvents = map[string]bool{
 		"broadcast": true,
+		"delete": true,
 	}
 	didEvents = map[string]bool{
 		apply: true,
