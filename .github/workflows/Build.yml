@@ -1,16 +1,35 @@
 name: Build&test dchat
-
-on: 
-  pull_request:
-    branches:
-      - master
-      - test
-      - i18n
+on:
+  workflow_dispatch:
+    inputs:
+      Reason:
+        description: 'Reasons for temporary build'     
+        required: true
+        default: 'No reason.Just do it.'
   push:
-    branches: 
-      - master
-      - test
-      - i18n
+        branches:
+          - master
+          - feature/*
+        paths-ignore:
+          - '**/*.md'
+          - .gitignore
+          - .editorconfig
+          - appveyor.yml
+          - 'azure-pipelines*.yml'
+          - 'ci/azure-pipelines/template*.yml'
+
+  pull_request:
+          branches:
+            - master
+            - feature/*
+            - release/*
+          paths-ignore:
+            - '**/*.md'
+            - .gitignore
+            - .editorconfig
+            - appveyor.yml
+            - 'azure-pipelines*.yml'
+            - 'ci/azure-pipelines/template*.yml'
 
 
 jobs:
