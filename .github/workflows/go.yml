@@ -1,0 +1,49 @@
+name: Build&test dchat
+
+on: 
+  pull_request:
+    branches:
+      - master
+      - test
+      - i18n
+  push:
+    branches: 
+      - master
+      - test
+      - i18n
+
+
+jobs:
+  Build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        sys: ['windows-latest']
+        ver: [ 'test','build' ]
+        go: ['1.16','1.15','1.14', '1.13' ]
+    name:  ${{ matrix.ver }} dchat With Go${{ matrix.go }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup go  ${{ matrix.go }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+
+      - name: ${{ matrix.ver }}  dchat in go  ${{ matrix.go }}
+        run: go ${{ matrix.ver }} 
+      - name: Cache local go package
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Artifact Pack
+        uses: actions/upload-artifact@v2
+        with:  
+          name: dchat-${{ matrix.ver }}-${{ matrix.go }}
+          path: |
+            dchat.exe
+            servers.json
