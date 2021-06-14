@@ -18,12 +18,12 @@ import (
 )
 
 var (
-	port int
-	clusterPort int
+	port         int
+	clusterPort  int
 	clusterSeeds string
 )
 
-func Run() {
+func Run(list ...[]string) {
 	flag.Bool("s", true, "")
 	flag.IntVar(&port, "p", 3333, "server port.")
 	flag.IntVar(&clusterPort, "cluster-port", 3334, "cluster port.")
@@ -32,7 +32,7 @@ func Run() {
 
 	// cluster
 	seeds := make([]string, 0)
-	if clusterSeeds != ""{
+	if clusterSeeds != "" {
 		seeds = strings.Split(clusterSeeds, ",")
 	}
 	err := cluster.Start(clusterPort, seeds)
@@ -44,7 +44,7 @@ func Run() {
 	task.Start()
 
 	// server
-	listener, err := net.Listen("tcp", ":" + strconv.Itoa(port))
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,10 +80,10 @@ func Run() {
 				}
 				if resp != nil {
 					err := c.Write(protocol.Msg{
-						ID: msg.ID,
+						ID:   msg.ID,
 						Data: json.Marshal(resp),
 					})
-					if err != nil{
+					if err != nil {
 						log.Printf("c.Write err %v\n", err)
 					}
 				}
