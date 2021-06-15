@@ -8,8 +8,7 @@ import (
 	"strconv"
 )
 
-func IsNumber(s string) bool{
+func IsNumber(s string) bool {
 	_, err := strconv.ParseInt(args[1], 10, 64)
 	return err == nil
 }
-

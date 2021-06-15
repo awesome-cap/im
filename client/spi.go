@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	name string
+	name  string
 	addrs string
 )
 
-func Run() {
+func Run(list ...[]string) {
 	flag.Bool("c", true, "")
 	flag.StringVar(&name, "n", "doge", "your name.")
 	flag.StringVar(&addrs, "addrs", "", "server addrs.")
@@ -20,7 +20,7 @@ func Run() {
 	if len(name) <= 0 {
 		log.Fatal("name can't be empty")
 	}
-	if len([]rune(name)) > 30{
+	if len([]rune(name)) > 30 {
 		log.Fatal("name length must in 30 char")
 	}
 	shell.New(name, addrs).Start()
