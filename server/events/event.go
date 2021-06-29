@@ -5,7 +5,10 @@ import (
 	"github.com/awesome-cmd/dchat/core/util/json"
 	"github.com/awesome-cmd/dchat/server/chats"
 	"strconv"
+	"sync"
 )
+
+var lock = sync.Mutex{}
 
 var processors = map[string]processor{
 	"rename": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
@@ -22,6 +25,9 @@ var processors = map[string]processor{
 		return event.Resp(0, json.Marshal(chats.Chats()), "success")
 	},
 	"change": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
+		lock.Lock()
+		defer lock.Unlock()
+
 		chatId, err := strconv.ParseInt(event.Data, 10, 64)
 		if err != nil{
 			return event.Resp(500, nil, "please input correct chat number.")
@@ -33,10 +39,16 @@ var processors = map[string]processor{
 		return event.Resp(0, nil, "success")
 	},
 	"leave": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
+		lock.Lock()
+		defer lock.Unlock()
+
 		chats.Leave(event.From)
 		return event.Resp(0, nil, "success")
 	},
 	"create": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
+		lock.Lock()
+		defer lock.Unlock()
+
 		if len(event.Data) == 0 {
 			return event.Resp(500, nil, "chat name can't be empty")
 		}
@@ -54,6 +66,9 @@ var processors = map[string]processor{
 		return event.Resp(0, json.Marshal(chat), "success")
 	},
 	"delete": func(id int64, event model.Event, producer func() (int64, error)) *model.Resp {
+		lock.Lock()
+		defer lock.Unlock()
+		
 		chatId, err := strconv.ParseInt(event.Data, 10, 64)
 		if err != nil{
 			return event.Resp(500, nil, "please input correct chat number.")
