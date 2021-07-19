@@ -2,6 +2,7 @@ package server
 
 import (
 	"flag"
+	"fmt"
 	"github.com/awesome-cap/im/core/model"
 	xnet "github.com/awesome-cap/im/core/net"
 	"github.com/awesome-cap/im/core/protocol"
@@ -25,18 +26,20 @@ var (
 
 func Run() {
 	flag.IntVar(&port, "p", 3333, "server port.")
-	flag.IntVar(&clusterPort, "cluster-port", 3334, "cluster port.")
+	flag.IntVar(&clusterPort, "cluster-port", 0, "cluster port.")
 	flag.StringVar(&clusterSeeds, "cluster-seeds", "", "cluster seeds.")
 	flag.Parse()
 
 	// cluster
-	seeds := make([]string, 0)
-	if clusterSeeds != "" {
-		seeds = strings.Split(clusterSeeds, ",")
-	}
-	err := cluster.Start(clusterPort, seeds)
-	if err != nil {
-		log.Fatal(err)
+	if clusterPort > 0 {
+		seeds := make([]string, 0)
+		if clusterSeeds != "" {
+			seeds = strings.Split(clusterSeeds, ",")
+		}
+		err := cluster.Start(clusterPort, seeds)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	// task
