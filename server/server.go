@@ -2,30 +2,26 @@ package server
 
 import (
 	"flag"
-	"fmt"
-	"github.com/awesome-cap/im/core/model"
-	xnet "github.com/awesome-cap/im/core/net"
-	"github.com/awesome-cap/im/core/protocol"
 	"github.com/awesome-cap/im/core/util/async"
-	"github.com/awesome-cap/im/core/util/json"
-	"github.com/awesome-cap/im/server/chats"
 	"github.com/awesome-cap/im/server/cluster"
-	"github.com/awesome-cap/im/server/events"
+	"github.com/awesome-cap/im/server/network"
 	"github.com/awesome-cap/im/server/task"
 	"log"
-	"net"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var (
 	port         int
+	wsPort       int
 	clusterPort  int
 	clusterSeeds string
 )
 
 func Run() {
 	flag.IntVar(&port, "p", 3333, "server port.")
+	flag.IntVar(&wsPort, "ws-port", 0, "server port.")
 	flag.IntVar(&clusterPort, "cluster-port", 0, "cluster port.")
 	flag.StringVar(&clusterSeeds, "cluster-seeds", "", "cluster seeds.")
 	flag.Parse()
@@ -46,56 +42,22 @@ func Run() {
 	task.Start()
 
 	// server
-	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
-	if err != nil {
-		log.Fatal(err)
+	networks := make([]network.Network, 0)
+	networks = append(networks, network.NewTcpServer(":"+strconv.Itoa(port)))
+	if wsPort > 0 {
+		networks = append(networks, network.NewWebsocketServer(":"+strconv.Itoa(wsPort)))
 	}
-	log.Printf("listener on %d\n", port)
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Printf("listener.Accept err %v\n", err)
-			continue
-		}
+	wg := sync.WaitGroup{}
+	wg.Add(len(networks))
+	for _, n := range networks {
+		network := n
 		async.Async(func() {
-			c := xnet.NewConn(conn)
-			chats.BindClient(c)
-			defer chats.Clean(c)
-
-			// distribute id
-			err := c.Write(protocol.Msg{
-				ID: 0,
-				Data: json.Marshal(model.Resp{
-					Code: 0,
-					Type: "id",
-					Data: []byte(strconv.FormatInt(c.ID, 10)),
-				}),
-			})
+			defer wg.Add(-1)
+			err := network.Serve()
 			if err != nil {
-				log.Printf("c.Write err %v\n", err)
-				return
-			}
-			err = c.Accept(func(msg protocol.Msg, c *xnet.Conn) {
-				event := model.Event{}
-				json.Unmarshal(msg.Data, &event)
-				event.From = chats.Client(c)
-				resp := events.Process(msg.ID, event, cluster.NextID)
-				if cluster.BroadcastEvents[event.Type] {
-					cluster.Broadcast(json.Marshal(event))
-				}
-				if resp != nil {
-					err := c.Write(protocol.Msg{
-						ID:   msg.ID,
-						Data: json.Marshal(resp),
-					})
-					if err != nil {
-						log.Printf("c.Write err %v\n", err)
-					}
-				}
-			})
-			if err != nil {
-				log.Printf("c.Accept err %v\n", err)
+				log.Println(err)
 			}
 		})
 	}
+	wg.Wait()
 }

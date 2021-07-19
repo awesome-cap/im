@@ -2,7 +2,7 @@ package chats
 
 import (
 	"github.com/awesome-cap/im/core/model"
-	"github.com/awesome-cap/im/core/net"
+	"github.com/awesome-cap/im/core/network"
 	"github.com/awesome-cap/im/core/protocol"
 	"github.com/awesome-cap/im/core/util/async"
 	"github.com/awesome-cap/im/core/util/json"
@@ -11,23 +11,23 @@ import (
 )
 
 var (
-	chats = map[int64]*model.Chat{}
+	chats       = map[int64]*model.Chat{}
 	chatClients = map[int64]map[int64]bool{}
-	clients = map[int64]*model.Client{}
-	clientConn = map[int64]*net.Conn{}
+	clients     = map[int64]*model.Client{}
+	clientConn  = map[int64]*network.Conn{}
 )
 
-func Change(c *model.Client, chatId int64) bool{
+func Change(c *model.Client, chatId int64) bool {
 	return Join(c, chatId)
 }
 
-func Create(c *model.Client, name string, id int64) (*model.Chat, error){
+func Create(c *model.Client, name string, id int64) (*model.Chat, error) {
 	chat := &model.Chat{
-		ID: id,
-		Name: name,
-		Creator: c.Name,
-		CreateID: c.ID,
-		CreateTime: time.Now(),
+		ID:             id,
+		Name:           name,
+		Creator:        c.Name,
+		CreateID:       c.ID,
+		CreateTime:     time.Now(),
 		LastActiveTime: time.Now(),
 	}
 	chats[chat.ID] = chat
@@ -35,16 +35,16 @@ func Create(c *model.Client, name string, id int64) (*model.Chat, error){
 	return chat, nil
 }
 
-func Delete(c *model.Client, chatId int64) bool{
+func Delete(c *model.Client, chatId int64) bool {
 	chat := chats[chatId]
-	if chat != nil && chat.CreateID == c.ID{
+	if chat != nil && chat.CreateID == c.ID {
 		DeleteChatLogically(chatId)
 		return true
 	}
 	return false
 }
 
-func DeleteChatLogically(chatId int64){
+func DeleteChatLogically(chatId int64) {
 	defer flushLastActiveTime(chatId)
 	if chat, ok := chats[chatId]; ok {
 		chat.Deleted = true
@@ -52,15 +52,15 @@ func DeleteChatLogically(chatId int64){
 	}
 }
 
-func DeleteChatPhysically(chatId int64){
+func DeleteChatPhysically(chatId int64) {
 	defer flushLastActiveTime(chatId)
 	delete(chats, chatId)
 	deleteChatClients(chatId)
 }
 
-func deleteChatClients(chatId int64){
+func deleteChatClients(chatId int64) {
 	if chatClients[chatId] != nil {
-		for cid := range chatClients[chatId]{
+		for cid := range chatClients[chatId] {
 			if clients[cid] != nil {
 				Leave(clients[cid])
 			}
@@ -69,10 +69,10 @@ func deleteChatClients(chatId int64){
 	delete(chatClients, chatId)
 }
 
-func Broadcast(c *model.Client, id int64, msg *model.Resp){
+func Broadcast(c *model.Client, id int64, msg *model.Resp) {
 	defer flushLastActiveTime(c.ChatID)
-	if c.ChatID > 0 && chatClients[c.ChatID] != nil{
-		for clientId := range chatClients[c.ChatID]{
+	if c.ChatID > 0 && chatClients[c.ChatID] != nil {
+		for clientId := range chatClients[c.ChatID] {
 			cid := clientId
 			if clients[cid] != nil {
 				async.Async(func() {
@@ -83,17 +83,17 @@ func Broadcast(c *model.Client, id int64, msg *model.Resp){
 	}
 }
 
-func Reply(c *model.Client, id int64, msg *model.Resp){
+func Reply(c *model.Client, id int64, msg *model.Resp) {
 	conn := clientConn[c.ID]
 	if conn != nil {
 		_ = conn.Write(protocol.Msg{
-			ID: id,
+			ID:   id,
 			Data: json.Marshal(msg),
 		})
 	}
 }
 
-func BindClient(conn *net.Conn) {
+func BindClient(conn *network.Conn) {
 	conn.ID = time.Now().UnixNano()
 	clientConn[conn.ID] = conn
 	clients[conn.ID] = &model.Client{
@@ -101,10 +101,10 @@ func BindClient(conn *net.Conn) {
 	}
 }
 
-func Chats() []*model.Chat{
+func Chats() []*model.Chat {
 	result := make([]*model.Chat, 0)
 	for _, v := range chats {
-		if ! v.Deleted {
+		if !v.Deleted {
 			result = append(result, v)
 		}
 	}
@@ -114,15 +114,15 @@ func Chats() []*model.Chat{
 	return result
 }
 
-func Exist(chatId int64) bool{
+func Exist(chatId int64) bool {
 	return chats[chatId] != nil
 }
 
-func GetChats() map[int64]*model.Chat{
+func GetChats() map[int64]*model.Chat {
 	return chats
 }
 
-func Client(c *net.Conn) *model.Client{
+func Client(c *network.Conn) *model.Client {
 	return clients[c.ID]
 }
 
@@ -134,7 +134,7 @@ func Leave(c *model.Client) {
 	}
 }
 
-func Join(c *model.Client, chatId int64) bool{
+func Join(c *model.Client, chatId int64) bool {
 	defer flushLastActiveTime(c.ChatID)
 	if _, ok := chatClients[chatId]; ok {
 		Leave(c)
@@ -145,7 +145,7 @@ func Join(c *model.Client, chatId int64) bool{
 	return false
 }
 
-func Clean(c *net.Conn){
+func Clean(c *network.Conn) {
 	client := clients[c.ID]
 	if client != nil {
 		delete(chatClients[client.ChatID], c.ID)
@@ -154,7 +154,7 @@ func Clean(c *net.Conn){
 	delete(clientConn, c.ID)
 }
 
-func MergeRemoteChats(chatList map[int64]*model.Chat){
+func MergeRemoteChats(chatList map[int64]*model.Chat) {
 	for k, v := range chatList {
 		chat := chats[v.ID]
 		if chat != nil {
@@ -164,18 +164,18 @@ func MergeRemoteChats(chatList map[int64]*model.Chat){
 			if v.Deleted {
 				chat.Deleted = true
 			}
-		}else{
+		} else {
 			chats[v.ID] = v
-			if _, ok := chatClients[k]; ! ok{
+			if _, ok := chatClients[k]; !ok {
 				chatClients[k] = map[int64]bool{}
 			}
 		}
 	}
 }
 
-func flushLastActiveTime(chatId int64){
+func flushLastActiveTime(chatId int64) {
 	if chat, ok := chats[chatId]; ok {
-		if ! chat.Deleted{
+		if !chat.Deleted {
 			chat.LastActiveTime = time.Now()
 		}
 	}

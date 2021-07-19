@@ -13,18 +13,18 @@ import (
 	"time"
 )
 
-const(
-	apply = "incr-apply"
+const (
+	apply       = "incr-apply"
 	applyAccess = "incr-apply-access"
 	applyRefuse = "incr-apply-refuse"
-	increment = "incr-increment"
+	increment   = "incr-increment"
 	incremented = "incr-incremented"
 )
 
 type DID struct {
-	ID int64 `json:"id"`
-	StartTime int64 `json:"startTime"`
-	Node string `json:"node"`
+	ID        int64  `json:"id"`
+	StartTime int64  `json:"startTime"`
+	Node      string `json:"node"`
 
 	// 0 finished
 	// 1 starting
@@ -35,59 +35,52 @@ type DID struct {
 	// -1 refuse
 	states map[string]int
 
-	
 	notify chan bool
 	sync.RWMutex
 }
 
-func NextID() (int64, error){
-	tryTimes := 3
-	for i := 0; i < tryTimes; i ++{
-		id, err := did.next()
-		if err == nil {
-			return id, nil
+func NextID() (int64, error) {
+	if ml != nil {
+		tryTimes := 3
+		for i := 0; i < tryTimes; i++ {
+			id, err := did.next()
+			if err == nil {
+				return id, nil
+			}
 		}
+		return 0, errors.New("did err")
 	}
-	return 0, errors.New("did err")
+	return did.increment(), nil
 }
 
-func (d *DID) next() (int64, error){
+func (d *DID) next() (int64, error) {
 	d.start()
 	defer d.finished()
 	if len(d.states) > 0 {
 		d.broadcast(apply)
 		accessed, err := d.waitForReply()
-		if err != nil{
+		if err != nil {
 			return 0, err
 		}
-		if ! accessed {
+		if !accessed {
 			return 0, errors.New("refused")
 		}
 	}
 	d.state = 2
 	d.increment()
 	d.broadcast(increment)
-	//if len(d.states) > 0{
-	//	d.broadcast(increment)
-	//	_, err := d.waitForReply()
-	//	if err != nil{
-	//		fmt.Printf("waitForReply2 err: %v \n", err)
-	//		d.decrement()
-	//		return 0, err
-	//	}
-	//}
 	return d.ID, nil
 }
 
-func (d *DID) increment(){
-	atomic.AddInt64(&d.ID, 1)
+func (d *DID) increment() int64 {
+	return atomic.AddInt64(&d.ID, 1)
 }
 
-func (d *DID) decrement(){
-	atomic.AddInt64(&d.ID, -1)
+func (d *DID) decrement() int64 {
+	return atomic.AddInt64(&d.ID, -1)
 }
 
-func (d *DID) start(){
+func (d *DID) start() {
 	d.Lock()
 	d.state = 1
 	d.StartTime = time.Now().UnixNano()
@@ -101,29 +94,29 @@ func (d *DID) start(){
 	}
 }
 
-func (d *DID) finished(){
+func (d *DID) finished() {
 	d.Unlock()
 	d.state = 0
 }
 
-func (d *DID) process(event model.Event){
+func (d *DID) process(event model.Event) {
 	remote := DID{}
 	json.Unmarshal([]byte(event.Data), &remote)
 	switch event.Type {
 	case apply:
 		t := applyAccess
-		if d.state != 0 && d.StartTime <= remote.StartTime{
+		if d.state != 0 && d.StartTime <= remote.StartTime {
 			t = applyRefuse
 		}
 		d.broadcast(t)
 	case applyAccess, applyRefuse:
-		if _, ok := d.states[remote.Node]; ok && d.state == 1{
+		if _, ok := d.states[remote.Node]; ok && d.state == 1 {
 			if event.Type == applyAccess {
 				d.states[remote.Node] = 1
 				if d.ID < remote.ID {
 					d.ID = remote.ID
 				}
-			}else{
+			} else {
 				d.states[remote.Node] = -1
 			}
 			completed := true
@@ -145,7 +138,7 @@ func (d *DID) process(event model.Event){
 		d.increment()
 		//d.broadcast(incremented)
 	case incremented:
-		if  _, ok := d.states[remote.Node]; ok && d.state == 2 {
+		if _, ok := d.states[remote.Node]; ok && d.state == 2 {
 			d.states[remote.Node] = 2
 			completed := true
 			for _, state := range d.states {
@@ -161,7 +154,7 @@ func (d *DID) process(event model.Event){
 	}
 }
 
-func (d *DID) broadcast(t string){
+func (d *DID) broadcast(t string) {
 	d.Node = ml.LocalNode().Name
 	broadcasts.QueueBroadcast(&broadcast{
 		msg: json.Marshal(model.Event{
@@ -171,12 +164,11 @@ func (d *DID) broadcast(t string){
 	})
 }
 
-func (d *DID) waitForReply() (bool, error){
+func (d *DID) waitForReply() (bool, error) {
 	select {
-	case accessed := <- d.notify:
+	case accessed := <-d.notify:
 		return accessed, nil
-	case <- time.After(time.Second * 1):
+	case <-time.After(time.Second * 1):
 		return false, errors.New("timeout")
 	}
 }
-

@@ -16,30 +16,30 @@ var servers = []string{
 }
 
 type shell struct {
-	ctx *ctx.ChatContext
+	ctx      *ctx.ChatContext
 	position *directory
-	addrs string
+	addrs    string
 }
 
-func New(name string, addrs string) *shell{
+func New(name, net, addrs string) *shell {
 	return &shell{
-		ctx: ctx.NewContext(name),
+		ctx:      ctx.NewContext(name, net),
 		position: root,
-		addrs: addrs,
+		addrs:    addrs,
 	}
 }
 
-func (s *shell) Start(){
-	for{
+func (s *shell) Start() {
+	for {
 		fmt.Printf("[%s@chat %s]# ", s.ctx.Name, s.position.name)
 		inputs, err := render.Readline()
-		if err != nil{
+		if err != nil {
 			fmt.Println(err.Error())
 			continue
 		}
 		if strings.TrimSpace(string(inputs)) != "" {
 			res, err := s.position.action(s, inputs)
-			if err != nil{
+			if err != nil {
 				fmt.Println(err.Error())
 				continue
 			}
@@ -48,14 +48,14 @@ func (s *shell) Start(){
 	}
 }
 
-func (s *shell) refreshServerList() error{
+func (s *shell) refreshServerList() error {
 	serverList := make([]string, 0)
 	if s.addrs != "" {
-		serverList = append(serverList, s.addrs + "|default")
-	}else{
+		serverList = append(serverList, s.addrs+"|default")
+	} else {
 		for _, server := range servers {
 			resp, err := http.Get(server)
-			if err != nil && resp == ""{
+			if err != nil && resp == "" {
 				continue
 			}
 			json.Unmarshal([]byte(resp), &serverList)
@@ -65,10 +65,9 @@ func (s *shell) refreshServerList() error{
 		return errors.New("no available server. ")
 	}
 	s.position.reset()
-	for _, v := range serverList{
+	for _, v := range serverList {
 		serverInfo := strings.Split(v, "|")
-		s.position.add(newDirectory(strings.ToLower(serverInfo[1]), strings.ToLower( serverInfo[0]), serverActions, baseActions))
+		s.position.add(newDirectory(strings.ToLower(serverInfo[1]), strings.ToLower(serverInfo[0]), serverActions, baseActions))
 	}
 	return nil
 }
-

@@ -9,11 +9,13 @@ import (
 var (
 	name  string
 	addrs string
+	net   string
 )
 
 func Run() {
 	flag.StringVar(&name, "n", "doge", "your name.")
 	flag.StringVar(&addrs, "addrs", "", "server addrs.")
+	flag.StringVar(&net, "net", "tcp", "network.")
 	flag.Parse()
 
 	if len(name) <= 0 {
@@ -22,5 +24,5 @@ func Run() {
 	if len([]rune(name)) > 30 {
 		log.Fatal("name length must in 30 char")
 	}
-	shell.New(name, addrs).Start()
+	shell.New(name, net, addrs).Start()
 }
