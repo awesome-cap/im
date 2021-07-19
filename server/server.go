@@ -23,8 +23,7 @@ var (
 	clusterSeeds string
 )
 
-func Run(list ...[]string) {
-	flag.Bool("s", true, "")
+func Run() {
 	flag.IntVar(&port, "p", 3333, "server port.")
 	flag.IntVar(&clusterPort, "cluster-port", 3334, "cluster port.")
 	flag.StringVar(&clusterSeeds, "cluster-seeds", "", "cluster seeds.")
@@ -48,6 +47,7 @@ func Run(list ...[]string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("listener on %d\n", port)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -58,6 +58,8 @@ func Run(list ...[]string) {
 			c := xnet.NewConn(conn)
 			chats.BindClient(c)
 			defer chats.Clean(c)
+
+			// distribute id
 			err := c.Write(protocol.Msg{
 				ID: 0,
 				Data: json.Marshal(model.Resp{

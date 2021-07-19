@@ -11,8 +11,7 @@ var (
 	addrs string
 )
 
-func Run(list ...[]string) {
-	flag.Bool("c", true, "")
+func Run() {
 	flag.StringVar(&name, "n", "doge", "your name.")
 	flag.StringVar(&addrs, "addrs", "", "server addrs.")
 	flag.Parse()

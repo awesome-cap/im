@@ -2,7 +2,6 @@ package net
 
 import (
 	"github.com/awesome-cmd/im/core/protocol"
-	"github.com/awesome-cmd/im/core/util/async"
 	"net"
 	"sync/atomic"
 )
@@ -26,29 +25,6 @@ func NewConn(conn net.Conn) *Conn{
 	}
 }
 
-func (c *Conn) read() error{
-	buffered := make([]byte, 1024)
-	n, err := c.conn.Read(buffered)
-	if err != nil{
-		return err
-	}
-	c.streams = append(c.streams, buffered[0:n]...)
-	return nil
-}
-
-func (c *Conn) parse() ([]*protocol.Msg, error) {
-	msgs := make([]*protocol.Msg, 0)
-	for {
-		msg, index, err := protocol.Decode(c.streams)
-		if err != nil{
-			break
-		}
-		msgs = append(msgs, msg)
-		c.streams = c.streams[index:]
-	}
-	return msgs, nil
-}
-
 func (c *Conn) Close() error {
 	c.state = 1
 	return c.conn.Close()
@@ -60,20 +36,11 @@ func (c *Conn) State() int {
 
 func (c *Conn) Accept(apply func(msg protocol.Msg, c *Conn)) error{
 	for {
-		err := c.read()
-		if err != nil {
+		msg, err := protocol.Decode(c.conn)
+		if err != nil{
 			return err
 		}
-		msgs, err := c.parse()
-		if err != nil {
-			return err
-		}
-		for _, m := range msgs{
-			msg := m
-			async.Async(func() {
-				apply(*msg, c)
-			})
-		}
+		apply(*msg, c)
 	}
 }
 

@@ -3,11 +3,10 @@ package protocol
 import (
 	"encoding/binary"
 	"errors"
-	"strings"
+	"io"
 )
 
 var (
-	prefix = []byte{11, 24, 21, 126, 127}
 	lenSize = 4
 	idSize = 8
 	LengthError = errors.New("Data length error. ")
@@ -18,36 +17,50 @@ type Msg struct {
 	Data []byte `json:"data"`
 }
 
+func ReadUint32(reader io.Reader) (uint32, error) {
+	data := make([]byte, 4)
+	_, err := io.ReadFull(reader, data)
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint32(data), nil
+}
+
+func ReadUint64(reader io.Reader) (uint64, error) {
+	data := make([]byte, 8)
+	_, err := io.ReadFull(reader, data)
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint64(data), nil
+}
+
 func Encode(msg Msg) []byte{
 	idBytes, lenBytes := make([]byte, idSize), make([]byte, lenSize)
 	binary.BigEndian.PutUint32(lenBytes, uint32(len(msg.Data)))
 	binary.BigEndian.PutUint64(idBytes, uint64(msg.ID))
 	data := make([]byte, 0)
-	data = append(data, prefix...)
-	data = append(data, lenBytes...)
 	data = append(data, idBytes...)
-	data = append(data, )
+	data = append(data, lenBytes...)
 	return append(data, msg.Data...)
 }
 
-func Decode(data []byte) (*Msg, int, error){
-	start := strings.Index(string(data), string(prefix))
-	if start == -1 {
-		return nil, 0, LengthError
+func Decode(r io.Reader) (*Msg, error){
+	id, err := ReadUint64(r)
+	if err != nil{
+		return nil, err
 	}
-	start = start + len(prefix)
-	if len(data) < start + lenSize + idSize{
-		return nil, 0, LengthError
+	l, err := ReadUint32(r)
+	if err != nil{
+		return nil, err
 	}
-	size := int(binary.BigEndian.Uint32(data[start:start + lenSize]))
-	start = start + lenSize
-	id := int64(binary.BigEndian.Uint64(data[start:start + idSize]))
-	start = start + idSize
-	if len(data) < start + size {
-		return nil, 0, LengthError
+	dataBytes := make([]byte, l)
+	_, err = io.ReadFull(r, dataBytes)
+	if err != nil{
+		return nil, err
 	}
 	return &Msg{
-		ID: id,
-		Data: data[start: start + size],
-	}, start + size, nil
+		ID: int64(id),
+		Data: dataBytes,
+	}, nil
 }
