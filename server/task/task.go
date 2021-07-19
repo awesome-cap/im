@@ -7,8 +7,8 @@ package task
 import (
 	"errors"
 	"fmt"
-	"github.com/awesome-cmd/dchat/core/util/async"
-	"github.com/awesome-cmd/dchat/server/chats"
+	"github.com/awesome-cmd/im/core/util/async"
+	"github.com/awesome-cmd/im/server/chats"
 	"strconv"
 	"strings"
 	"time"

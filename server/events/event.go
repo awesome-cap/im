@@ -1,9 +1,9 @@
 package events
 
 import (
-	"github.com/awesome-cmd/dchat/core/model"
-	"github.com/awesome-cmd/dchat/core/util/json"
-	"github.com/awesome-cmd/dchat/server/chats"
+	"github.com/awesome-cmd/im/core/model"
+	"github.com/awesome-cmd/im/core/util/json"
+	"github.com/awesome-cmd/im/server/chats"
 	"strconv"
 	"sync"
 )

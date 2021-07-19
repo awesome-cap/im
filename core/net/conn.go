@@ -1,8 +1,8 @@
 package net
 
 import (
-	"github.com/awesome-cmd/dchat/core/protocol"
-	"github.com/awesome-cmd/dchat/core/util/async"
+	"github.com/awesome-cmd/im/core/protocol"
+	"github.com/awesome-cmd/im/core/util/async"
 	"net"
 	"sync/atomic"
 )

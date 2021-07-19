@@ -1,9 +1,9 @@
 # dchat
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/awesome-cmd/dchat?color=pink&logo=go&logoColor=yellow&style=flat-square)
-[![Build&test dchat](https://github.com/awesome-cmd/dchat/actions/workflows/Build.yml/badge.svg)](https://github.com/awesome-cmd/dchat/actions/workflows/Build.yml)
-[![GitHub license](https://img.shields.io/github/license/awesome-cmd/dchat?color=blue&style=flat-square)](https://github.com/awesome-cmd/dchat/blob/main/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/awesome-cmd/dchat?color=red&style=flat-square)](https://github.com/awesome-cmd/dchat/stargazers)
+[![Build&test dchat](https://github.com/awesome-cmd/im/actions/workflows/Build.yml/badge.svg)](https://github.com/awesome-cmd/im/actions/workflows/Build.yml)
+[![GitHub license](https://img.shields.io/github/license/awesome-cmd/dchat?color=blue&style=flat-square)](https://github.com/awesome-cmd/im/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/awesome-cmd/dchat?color=red&style=flat-square)](https://github.com/awesome-cmd/im/stargazers)
 
 
 # Introduce
@@ -18,7 +18,7 @@
 # Start
 ## Install
 ```golang
-go get -u github.com/awesome-cmd/dchat
+go get -u github.com/awesome-cmd/im
 ```
 ## Server:
 ```powershell

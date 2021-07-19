@@ -2,7 +2,7 @@ package client
 
 import (
 	"flag"
-	"github.com/awesome-cmd/dchat/client/shell"
+	"github.com/awesome-cmd/im/client/shell"
 	"log"
 )
 

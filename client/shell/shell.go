@@ -3,10 +3,10 @@ package shell
 import (
 	"errors"
 	"fmt"
-	"github.com/awesome-cmd/dchat/client/ctx"
-	"github.com/awesome-cmd/dchat/client/render"
-	"github.com/awesome-cmd/dchat/core/util/http"
-	"github.com/awesome-cmd/dchat/core/util/json"
+	"github.com/awesome-cmd/im/client/ctx"
+	"github.com/awesome-cmd/im/client/render"
+	"github.com/awesome-cmd/im/core/util/http"
+	"github.com/awesome-cmd/im/core/util/json"
 	"strings"
 )
 
