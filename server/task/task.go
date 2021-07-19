@@ -7,8 +7,8 @@ package task
 import (
 	"errors"
 	"fmt"
-	"github.com/awesome-cmd/im/core/util/async"
-	"github.com/awesome-cmd/im/server/chats"
+	"github.com/awesome-cap/im/core/util/async"
+	"github.com/awesome-cap/im/server/chats"
 	"strconv"
 	"strings"
 	"time"

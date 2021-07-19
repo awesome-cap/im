@@ -1,9 +1,9 @@
 package events
 
 import (
-	"github.com/awesome-cmd/im/core/model"
-	"github.com/awesome-cmd/im/core/util/json"
-	"github.com/awesome-cmd/im/server/chats"
+	"github.com/awesome-cap/im/core/model"
+	"github.com/awesome-cap/im/core/util/json"
+	"github.com/awesome-cap/im/server/chats"
 	"strconv"
 	"sync"
 )

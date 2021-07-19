@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/awesome-cmd/im/client/render"
+	"github.com/awesome-cap/im/client/render"
 	"os"
 	"strconv"
 	"strings"

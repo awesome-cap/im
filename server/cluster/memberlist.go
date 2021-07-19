@@ -5,10 +5,10 @@
 package cluster
 
 import (
-	"github.com/awesome-cmd/im/core/model"
-	"github.com/awesome-cmd/im/core/util/json"
-	"github.com/awesome-cmd/im/server/chats"
-	"github.com/awesome-cmd/im/server/events"
+	"github.com/awesome-cap/im/core/model"
+	"github.com/awesome-cap/im/core/util/json"
+	"github.com/awesome-cap/im/server/chats"
+	"github.com/awesome-cap/im/server/events"
 	"github.com/hashicorp/memberlist"
 	"log"
 	"net"

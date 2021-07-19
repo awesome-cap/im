@@ -1,7 +1,7 @@
 package net
 
 import (
-	"github.com/awesome-cmd/im/core/protocol"
+	"github.com/awesome-cap/im/core/protocol"
 	"net"
 	"sync/atomic"
 )

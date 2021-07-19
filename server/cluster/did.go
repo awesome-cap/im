@@ -6,8 +6,8 @@ package cluster
 
 import (
 	"errors"
-	"github.com/awesome-cmd/im/core/model"
-	"github.com/awesome-cmd/im/core/util/json"
+	"github.com/awesome-cap/im/core/model"
+	"github.com/awesome-cap/im/core/util/json"
 	"sync"
 	"sync/atomic"
 	"time"

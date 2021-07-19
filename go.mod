@@ -1,4 +1,4 @@
-module github.com/awesome-cmd/im
+module github.com/awesome-cap/im
 
 go 1.15
 

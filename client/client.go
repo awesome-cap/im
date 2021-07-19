@@ -2,7 +2,7 @@ package client
 
 import (
 	"flag"
-	"github.com/awesome-cmd/im/client/shell"
+	"github.com/awesome-cap/im/client/shell"
 	"log"
 )
 

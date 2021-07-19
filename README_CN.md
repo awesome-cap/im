@@ -10,7 +10,7 @@
 # Start
 ## Install
 ```golang
-go get -u github.com/awesome-cmd/im
+go get -u github.com/awesome-cap/im
 ```
 ## Server:
 ```powershell
