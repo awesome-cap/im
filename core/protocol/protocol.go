@@ -2,14 +2,12 @@ package protocol
 
 import (
 	"encoding/binary"
-	"errors"
 	"io"
 )
 
 var (
 	lenSize     = 4
 	idSize      = 8
-	LengthError = errors.New("Data length error. ")
 )
 
 type Msg struct {

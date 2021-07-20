@@ -94,7 +94,6 @@ func Reply(c *model.Client, id int64, msg *model.Resp) {
 }
 
 func BindClient(conn *network.Conn) {
-	conn.ID = time.Now().UnixNano()
 	clientConn[conn.ID] = conn
 	clients[conn.ID] = &model.Client{
 		ID: conn.ID,

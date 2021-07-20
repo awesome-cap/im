@@ -24,7 +24,7 @@ func (w WebsocketReadWriteCloser) Read() (*Msg, error) {
 }
 
 func (w WebsocketReadWriteCloser) Write(msg Msg) error {
-	return w.conn.WriteJSON(msg)
+	return w.conn.WriteMessage(websocket.TextMessage, json.Marshal(msg))
 }
 
 func (w WebsocketReadWriteCloser) Close() error {
