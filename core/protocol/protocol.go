@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 )
 
@@ -57,6 +58,9 @@ func Decode(r io.Reader) (*Msg, error) {
 	l, err := ReadUint32(r)
 	if err != nil {
 		return nil, err
+	}
+	if l > 65536 {
+		return nil, errors.New("overflow max packet size 65536 ")
 	}
 	dataBytes := make([]byte, l)
 	_, err = io.ReadFull(r, dataBytes)
