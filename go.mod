@@ -6,4 +6,5 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/memberlist v0.2.4
 	github.com/json-iterator/go v1.1.11
+	golang.org/x/sys v0.4.0 // indirect
 )
